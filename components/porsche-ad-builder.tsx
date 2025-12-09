@@ -59,7 +59,7 @@ export default function PorscheAdBuilder() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [imageScale, setImageScale] = useState(1.5);
-  const [fontSize, setFontSize] = useState(2.5);
+  const [fontSize, setFontSize] = useState(1.8);
   const [format, setFormat] = useState<FormatType>("poster"); // Added format state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -88,7 +88,7 @@ export default function PorscheAdBuilder() {
       setUploadedImage(e.target?.result as string);
       setImagePosition({ x: 0, y: 0 });
       setImageScale(1.5);
-      setFontSize(2.5);
+      setFontSize(1.8);
     };
     reader.readAsDataURL(selectedFile);
   }, []);
@@ -153,6 +153,57 @@ export default function PorscheAdBuilder() {
     setTextPosition({
       x: e.clientX - textDragStart.x,
       y: e.clientY - textDragStart.y,
+    });
+  };
+
+  // Touch handlers for mobile support
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!uploadedImage) return;
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({
+      x: touch.clientX - imagePosition.x,
+      y: touch.clientY - imagePosition.y,
+    });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      setImagePosition({
+        x: touch.clientX - dragStart.x,
+        y: touch.clientY - dragStart.y,
+      });
+    }
+    if (isDraggingText) {
+      handleTextTouchMove(e);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    setIsDraggingText(false);
+  };
+
+  const handleTextTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    const touch = e.touches[0];
+    setIsDraggingText(true);
+    setTextDragStart({
+      x: touch.clientX - textPosition.x,
+      y: touch.clientY - textPosition.y,
+    });
+  };
+
+  const handleTextTouchMove = (e: React.TouchEvent) => {
+    if (!isDraggingText) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const touch = e.touches[0];
+    setTextPosition({
+      x: touch.clientX - textDragStart.x,
+      y: touch.clientY - textDragStart.y,
     });
   };
 
@@ -297,7 +348,7 @@ export default function PorscheAdBuilder() {
             </Card>
 
             <Card
-              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl max-h-[80vh] min-h-[300px] mx-auto"
+              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl w-full sm:max-h-[80vh] sm:min-h-[300px] mx-auto"
               style={{ aspectRatio: currentFormat.aspectRatio }}
             >
               {!uploadedImage ? (
@@ -335,12 +386,15 @@ export default function PorscheAdBuilder() {
               ) : (
                 <div
                   ref={canvasRef}
-                  className="relative w-full cursor-move select-none overflow-hidden bg-gray-200"
+                  className="relative w-full cursor-move select-none overflow-hidden bg-gray-200 touch-none"
                   style={{ aspectRatio: currentFormat.aspectRatio }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                 >
                   <img
                     src={uploadedImage || "/placeholder.svg"}
@@ -361,13 +415,14 @@ export default function PorscheAdBuilder() {
 
                   <div className="absolute inset-0 z-30">
                     <div
-                      className="absolute p-8 md:p-12 pb-32 md:pb-44 pl-20 md:pl-28 pointer-events-auto cursor-move select-none"
+                      className="absolute p-4 sm:p-8 md:p-12 pb-16 sm:pb-32 md:pb-44 pl-8 sm:pl-20 md:pl-28 pointer-events-auto cursor-move select-none touch-none"
                       style={{
                         transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
                         bottom: 0,
                         left: 0,
                       }}
                       onMouseDown={handleTextMouseDown}
+                      onTouchStart={handleTextTouchStart}
                     >
                       <p
                         className="font-porsche font-bold leading-tight text-foreground text-balance max-w-2xl"
@@ -412,7 +467,7 @@ export default function PorscheAdBuilder() {
                     </div>
                     <input
                       type="range"
-                      min="1.5"
+                      min="0.8"
                       max="4"
                       step="0.1"
                       value={fontSize}
@@ -427,7 +482,7 @@ export default function PorscheAdBuilder() {
                       onClick={() => {
                         setImagePosition({ x: 0, y: 0 });
                         setImageScale(1.5);
-                        setFontSize(2.5);
+                        setFontSize(1.8);
                         setTextPosition({ x: 0, y: 0 });
                       }}
                       variant="outline"
