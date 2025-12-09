@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -69,16 +67,67 @@ export default function PorscheAdBuilder() {
   const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(
     null
   );
+  const [lastTextPinchDistance, setLastTextPinchDistance] = useState<
+    number | null
+  >(null);
   const [selectedTagline, setSelectedTagline] = useState<string>(
     PORSCHE_TAGLINES[0]
   );
   const [customTagline, setCustomTagline] = useState("");
   const [useCustomTagline, setUseCustomTagline] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<string | null>(null);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
   const canvasRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const currentFormat = FORMATS[format]; // Get current format config
+
+  // Track window width for responsive text positioning
+  React.useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Calculate responsive text positioning and sizing
+  const getResponsiveTextStyles = () => {
+    const isMobile = windowWidth < 640;
+    const isTablet = windowWidth >= 640 && windowWidth < 1024;
+
+    // Base measurements for desktop (1200px+)
+    const basePadding = { x: 112, y: 176 }; // pl-28 (112px) and pb-44 (176px)
+    const baseScale = 1;
+
+    if (isMobile) {
+      // Mobile: scale down significantly
+      return {
+        paddingLeft: Math.max(16, basePadding.x * 0.3),
+        paddingBottom: Math.max(32, basePadding.y * 0.4),
+        scale: 0.6,
+      };
+    } else if (isTablet) {
+      // Tablet: moderate scaling
+      return {
+        paddingLeft: Math.max(32, basePadding.x * 0.6),
+        paddingBottom: Math.max(64, basePadding.y * 0.7),
+        scale: 0.8,
+      };
+    } else {
+      // Desktop: full size
+      return {
+        paddingLeft: basePadding.x,
+        paddingBottom: basePadding.y,
+        scale: baseScale,
+      };
+    }
+  };
+
+  const responsiveStyles = getResponsiveTextStyles();
 
   const handleFileChange = useCallback((file: File | File[]) => {
     // Handle single file or array of files - take the first file if array
@@ -205,27 +254,47 @@ export default function PorscheAdBuilder() {
     setIsDragging(false);
     setIsDraggingText(false);
     setLastPinchDistance(null);
+    setLastTextPinchDistance(null);
   };
 
   const handleTextTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
-    const touch = e.touches[0];
-    setIsDraggingText(true);
-    setTextDragStart({
-      x: touch.clientX - textPosition.x,
-      y: touch.clientY - textPosition.y,
-    });
+
+    if (e.touches.length === 2) {
+      // Two fingers - start pinch gesture for text
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      setLastTextPinchDistance(distance);
+    } else if (e.touches.length === 1) {
+      // One finger - start drag
+      const touch = e.touches[0];
+      setIsDraggingText(true);
+      setTextDragStart({
+        x: touch.clientX - textPosition.x,
+        y: touch.clientY - textPosition.y,
+      });
+    }
   };
 
   const handleTextTouchMove = (e: React.TouchEvent) => {
-    if (!isDraggingText) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const touch = e.touches[0];
-    setTextPosition({
-      x: touch.clientX - textDragStart.x,
-      y: touch.clientY - textDragStart.y,
-    });
+    if (e.touches.length === 2 && lastTextPinchDistance !== null) {
+      // Two fingers - pinch to zoom text
+      e.preventDefault();
+      e.stopPropagation();
+      const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+      const scale = currentDistance / lastTextPinchDistance;
+      const newFontSize = Math.min(4, Math.max(0.8, fontSize * scale));
+      setFontSize(newFontSize);
+      setLastTextPinchDistance(currentDistance);
+    } else if (isDraggingText && e.touches.length === 1) {
+      // One finger - drag text
+      e.preventDefault();
+      e.stopPropagation();
+      const touch = e.touches[0];
+      setTextPosition({
+        x: touch.clientX - textDragStart.x,
+        y: touch.clientY - textDragStart.y,
+      });
+    }
   };
 
   // Scroll to zoom on desktop
@@ -235,6 +304,15 @@ export default function PorscheAdBuilder() {
     const delta = e.deltaY * -0.001;
     const newScale = Math.min(3, Math.max(0.5, imageScale + delta));
     setImageScale(newScale);
+  };
+
+  // Scroll to zoom text on desktop
+  const handleTextWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const delta = e.deltaY * -0.002; // Slightly more sensitive for text
+    const newFontSize = Math.min(4, Math.max(0.8, fontSize + delta));
+    setFontSize(newFontSize);
   };
 
   // Helper function to calculate distance between two touches
@@ -453,18 +531,32 @@ export default function PorscheAdBuilder() {
 
                   <div className="absolute inset-0 z-30">
                     <div
-                      className="absolute p-4 sm:p-8 md:p-12 pb-16 sm:pb-32 md:pb-44 pl-8 sm:pl-20 md:pl-28 pointer-events-auto cursor-move select-none touch-none"
+                      className="absolute pointer-events-auto cursor-move select-none touch-none"
                       style={{
-                        transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                        transform: `translate(${textPosition.x}px, ${textPosition.y}px) scale(${responsiveStyles.scale})`,
+                        transformOrigin: "bottom left",
                         bottom: 0,
                         left: 0,
+                        paddingLeft: `${responsiveStyles.paddingLeft}px`,
+                        paddingBottom: `${responsiveStyles.paddingBottom}px`,
+                        paddingTop: "32px",
+                        paddingRight: "32px",
                       }}
                       onMouseDown={handleTextMouseDown}
                       onTouchStart={handleTextTouchStart}
+                      onWheel={handleTextWheel}
                     >
                       <p
-                        className="font-porsche font-bold leading-tight text-foreground text-balance max-w-2xl"
-                        style={{ fontSize: `${fontSize}rem` }}
+                        className="font-porsche font-bold leading-tight text-foreground text-balance"
+                        style={{
+                          fontSize: `${fontSize}rem`,
+                          maxWidth:
+                            windowWidth < 640
+                              ? "280px"
+                              : windowWidth < 1024
+                              ? "400px"
+                              : "512px",
+                        }}
                       >
                         {displayTagline}
                       </p>
