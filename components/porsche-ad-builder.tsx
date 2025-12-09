@@ -476,7 +476,7 @@ export default function PorscheAdBuilder() {
             </Card>
 
             <Card
-              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl max-h-[80vh] min-h-[300px] mx-auto"
+              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl max-h-[80vh] min-h-[100px] mx-auto"
               style={{ aspectRatio: currentFormat.aspectRatio }}
             >
               {!uploadedImage ? (
