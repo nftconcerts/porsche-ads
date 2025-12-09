@@ -479,7 +479,10 @@ export default function PorscheAdBuilder() {
                 >
                   <div className="space-y-3">
                     {PORSCHE_TAGLINES.map((tagline) => (
-                      <div key={tagline} className="flex items-start space-x-2">
+                      <div
+                        key={tagline}
+                        className="flex items-start space-x-2 text-xl"
+                      >
                         <RadioGroupItem
                           value={tagline}
                           id={tagline}
