@@ -66,6 +66,9 @@ export default function PorscheAdBuilder() {
   const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
   const [isDraggingText, setIsDraggingText] = useState(false);
   const [textDragStart, setTextDragStart] = useState({ x: 0, y: 0 });
+  const [lastPinchDistance, setLastPinchDistance] = useState<number | null>(
+    null
+  );
   const [selectedTagline, setSelectedTagline] = useState<string>(
     PORSCHE_TAGLINES[0]
   );
@@ -159,16 +162,33 @@ export default function PorscheAdBuilder() {
   // Touch handlers for mobile support
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!uploadedImage) return;
-    const touch = e.touches[0];
-    setIsDragging(true);
-    setDragStart({
-      x: touch.clientX - imagePosition.x,
-      y: touch.clientY - imagePosition.y,
-    });
+
+    if (e.touches.length === 2) {
+      // Two fingers - start pinch gesture
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      setLastPinchDistance(distance);
+    } else if (e.touches.length === 1) {
+      // One finger - start drag
+      const touch = e.touches[0];
+      setIsDragging(true);
+      setDragStart({
+        x: touch.clientX - imagePosition.x,
+        y: touch.clientY - imagePosition.y,
+      });
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (isDragging) {
+    if (e.touches.length === 2 && lastPinchDistance !== null) {
+      // Two fingers - pinch to zoom
+      e.preventDefault();
+      const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+      const scale = currentDistance / lastPinchDistance;
+      const newScale = Math.min(3, Math.max(0.5, imageScale * scale));
+      setImageScale(newScale);
+      setLastPinchDistance(currentDistance);
+    } else if (isDragging && e.touches.length === 1) {
+      // One finger - drag
       e.preventDefault();
       const touch = e.touches[0];
       setImagePosition({
@@ -184,6 +204,7 @@ export default function PorscheAdBuilder() {
   const handleTouchEnd = () => {
     setIsDragging(false);
     setIsDraggingText(false);
+    setLastPinchDistance(null);
   };
 
   const handleTextTouchStart = (e: React.TouchEvent) => {
@@ -205,6 +226,22 @@ export default function PorscheAdBuilder() {
       x: touch.clientX - textDragStart.x,
       y: touch.clientY - textDragStart.y,
     });
+  };
+
+  // Scroll to zoom on desktop
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!uploadedImage) return;
+    e.preventDefault();
+    const delta = e.deltaY * -0.001;
+    const newScale = Math.min(3, Math.max(0.5, imageScale + delta));
+    setImageScale(newScale);
+  };
+
+  // Helper function to calculate distance between two touches
+  const getTouchDistance = (touch1: Touch, touch2: Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
   };
 
   const exportToJPG = useCallback(async () => {
@@ -395,6 +432,7 @@ export default function PorscheAdBuilder() {
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
+                  onWheel={handleWheel}
                 >
                   <img
                     src={uploadedImage || "/placeholder.svg"}
@@ -587,9 +625,19 @@ export default function PorscheAdBuilder() {
                   Premium Print & Ship - $
                   {(PRODUCTS[1].priceInCents / 100).toFixed(2)}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  Dev tip: Shift+click to test without payment
-                </p>
+                <button
+                  onClick={(e) => {
+                    if (uploadedImage) {
+                      handleExportClick("jpg-export", {
+                        shiftKey: true,
+                      } as React.MouseEvent);
+                    }
+                  }}
+                  disabled={!uploadedImage}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center mt-2 underline disabled:no-underline disabled:hover:text-muted-foreground"
+                >
+                  Dev tip: Tap here to test export (bypass payment)
+                </button>
               </div>
             </Card>
           </div>
