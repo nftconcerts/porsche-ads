@@ -63,6 +63,9 @@ export default function PorscheAdBuilder() {
   const [format, setFormat] = useState<FormatType>("poster"); // Added format state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingText, setIsDraggingText] = useState(false);
+  const [textDragStart, setTextDragStart] = useState({ x: 0, y: 0 });
   const [selectedTagline, setSelectedTagline] = useState<string>(
     PORSCHE_TAGLINES[0]
   );
@@ -119,15 +122,38 @@ export default function PorscheAdBuilder() {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setImagePosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
+    if (isDragging) {
+      setImagePosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
+    if (isDraggingText) {
+      handleTextMouseMove(e);
+    }
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    setIsDraggingText(false);
+  };
+
+  const handleTextMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent image dragging when clicking on text
+    setIsDraggingText(true);
+    setTextDragStart({
+      x: e.clientX - textPosition.x,
+      y: e.clientY - textPosition.y,
+    });
+  };
+
+  const handleTextMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingText) return;
+    e.stopPropagation();
+    setTextPosition({
+      x: e.clientX - textDragStart.x,
+      y: e.clientY - textDragStart.y,
+    });
   };
 
   const exportToJPG = useCallback(async () => {
@@ -225,10 +251,10 @@ export default function PorscheAdBuilder() {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 bg-[#0E0E12]">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8 text-center">
-          <h1 className="mb-2 font-serif text-4xl font-bold tracking-tight text-white">
+          <h1 className="mb-2 font-arial text-4xl font-bold tracking-tight text-white">
             Porsche Ad Builder
           </h1>
           <p className="text-gray-300">
@@ -237,7 +263,7 @@ export default function PorscheAdBuilder() {
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[1fr,400px]">
-          <div className="space-y-6 ">
+          <div className="space-y-6">
             <Card className="p-4">
               <Label className="mb-3 block text-sm font-semibold">
                 Select Format
@@ -271,7 +297,7 @@ export default function PorscheAdBuilder() {
             </Card>
 
             <Card
-              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl max-h-[80vh] min-h-[300px]"
+              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl max-h-[80vh] min-h-[300px] mx-auto"
               style={{ aspectRatio: currentFormat.aspectRatio }}
             >
               {!uploadedImage ? (
@@ -309,7 +335,7 @@ export default function PorscheAdBuilder() {
               ) : (
                 <div
                   ref={canvasRef}
-                  className="relative w-full cursor-move select-none overflow-hidden bg-white"
+                  className="relative w-full cursor-move select-none overflow-hidden bg-gray-200"
                   style={{ aspectRatio: currentFormat.aspectRatio }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -333,8 +359,16 @@ export default function PorscheAdBuilder() {
                     className="absolute inset-0 w-full h-full pointer-events-none object-cover z-20"
                   />
 
-                  <div className="absolute inset-0 flex flex-col justify-end pointer-events-none z-30">
-                    <div className="p-8 md:p-12 pb-32 md:pb-44 pl-20 md:pl-28">
+                  <div className="absolute inset-0 z-30">
+                    <div
+                      className="absolute p-8 md:p-12 pb-32 md:pb-44 pl-20 md:pl-28 pointer-events-auto cursor-move select-none"
+                      style={{
+                        transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                        bottom: 0,
+                        left: 0,
+                      }}
+                      onMouseDown={handleTextMouseDown}
+                    >
                       <p
                         className="font-porsche font-bold leading-tight text-foreground text-balance max-w-2xl"
                         style={{ fontSize: `${fontSize}rem` }}
@@ -394,11 +428,12 @@ export default function PorscheAdBuilder() {
                         setImagePosition({ x: 0, y: 0 });
                         setImageScale(1.5);
                         setFontSize(2.5);
+                        setTextPosition({ x: 0, y: 0 });
                       }}
                       variant="outline"
                       className="flex-1"
                     >
-                      Reset Position
+                      Reset All
                     </Button>
                     <Button
                       onClick={() => {
