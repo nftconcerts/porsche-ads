@@ -57,7 +57,7 @@ export default function PorscheAdBuilder() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [imageScale, setImageScale] = useState(1.5);
-  const [fontSize, setFontSize] = useState(1.8);
+  const [fontSize, setFontSize] = useState(2.5);
   const [format, setFormat] = useState<FormatType>("poster"); // Added format state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -93,41 +93,6 @@ export default function PorscheAdBuilder() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Calculate responsive text positioning and sizing
-  const getResponsiveTextStyles = () => {
-    const isMobile = windowWidth < 640;
-    const isTablet = windowWidth >= 640 && windowWidth < 1024;
-
-    // Base measurements for desktop (1200px+)
-    const basePadding = { x: 112, y: 176 }; // pl-28 (112px) and pb-44 (176px)
-    const baseScale = 1;
-
-    if (isMobile) {
-      // Mobile: scale down significantly
-      return {
-        paddingLeft: Math.max(16, basePadding.x * 0.3),
-        paddingBottom: Math.max(32, basePadding.y * 0.4),
-        scale: 0.6,
-      };
-    } else if (isTablet) {
-      // Tablet: moderate scaling
-      return {
-        paddingLeft: Math.max(32, basePadding.x * 0.6),
-        paddingBottom: Math.max(64, basePadding.y * 0.7),
-        scale: 0.8,
-      };
-    } else {
-      // Desktop: full size
-      return {
-        paddingLeft: basePadding.x,
-        paddingBottom: basePadding.y,
-        scale: baseScale,
-      };
-    }
-  };
-
-  const responsiveStyles = getResponsiveTextStyles();
 
   const handleFileChange = useCallback((file: File | File[]) => {
     // Handle single file or array of files - take the first file if array
@@ -325,6 +290,11 @@ export default function PorscheAdBuilder() {
   const exportToJPG = useCallback(async () => {
     if (!canvasRef.current || !uploadedImage) return;
 
+    // Detect iOS Safari (which has html-to-image issues with images)
+    const isIOS =
+      typeof navigator !== "undefined" &&
+      /iPad|iPhone|iPod/.test(navigator.userAgent);
+
     try {
       toast({
         title: "Generating Image...",
@@ -335,27 +305,59 @@ export default function PorscheAdBuilder() {
       const displayHeight = canvasRef.current.offsetHeight;
       const targetWidth = currentFormat.width;
       const targetHeight = currentFormat.height;
-      const pixelRatio = Math.max(
+
+      // Calculate pixel ratio with iOS safety caps
+      let pixelRatio = Math.max(
         targetWidth / displayWidth,
         targetHeight / displayHeight
       );
+
+      // iOS Safari has issues with large pixel ratios and data URL images
+      if (isIOS) {
+        pixelRatio = Math.min(pixelRatio, 2); // Cap at 2x for iOS stability
+      }
 
       console.log("[v0] Export settings:", {
         displaySize: `${displayWidth}x${displayHeight}`,
         targetSize: `${targetWidth}x${targetHeight}`,
         pixelRatio: pixelRatio.toFixed(2),
         format,
+        isIOS,
       });
 
-      // Use html-to-image to capture the exact DOM rendering at high resolution
-      const dataUrl = await htmlToImage.toJpeg(canvasRef.current, {
-        quality: 0.98, // Increased from 0.95 to 0.98 for better quality
-        pixelRatio: pixelRatio,
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        skipFonts: true, // Prevents CORS errors from external font stylesheets
-      });
+      // iOS Safari workaround: do a warm-up render first
+      const doRender = () =>
+        htmlToImage.toJpeg(canvasRef.current!, {
+          quality: 0.98,
+          pixelRatio: pixelRatio,
+          cacheBust: true,
+          backgroundColor: "#ffffff",
+          skipFonts: true,
+          // Additional iOS-specific options
+          ...(isIOS && {
+            width: displayWidth,
+            height: displayHeight,
+            style: {
+              transform: "scale(1)",
+              transformOrigin: "top left",
+            },
+          }),
+        });
 
+      let dataUrl: string;
+
+      if (isIOS) {
+        // Warm-up render for iOS Safari stability
+        try {
+          await doRender();
+          console.log("[v0] iOS warm-up render completed");
+        } catch (warmupError) {
+          console.log("[v0] iOS warm-up render failed, continuing anyway");
+        }
+      }
+
+      // Main render
+      dataUrl = await doRender();
       console.log("[v0] Export complete, image generated");
 
       // Download the image
@@ -370,11 +372,22 @@ export default function PorscheAdBuilder() {
       });
     } catch (error) {
       console.error("[v0] Export failed:", error);
-      toast({
-        title: "Export Failed",
-        description: "Please try again",
-        variant: "destructive",
-      });
+
+      // More specific error messages for iOS
+      if (isIOS) {
+        toast({
+          title: "Export Failed on iOS",
+          description:
+            "Try using a smaller image or different format. iOS Safari has limitations with large exports.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Export Failed",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      }
     }
   }, [uploadedImage, format, currentFormat, toast]);
 
@@ -463,7 +476,7 @@ export default function PorscheAdBuilder() {
             </Card>
 
             <Card
-              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl w-full sm:max-h-[80vh] sm:min-h-[300px] mx-auto"
+              className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl max-h-[80vh] min-h-[300px] mx-auto"
               style={{ aspectRatio: currentFormat.aspectRatio }}
             >
               {!uploadedImage ? (
@@ -532,12 +545,12 @@ export default function PorscheAdBuilder() {
                     <div
                       className="absolute pointer-events-auto cursor-move select-none touch-none"
                       style={{
-                        transform: `translate(${textPosition.x}px, ${textPosition.y}px) scale(${responsiveStyles.scale})`,
+                        transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
                         transformOrigin: "bottom left",
                         bottom: 0,
                         left: 0,
-                        paddingLeft: `${responsiveStyles.paddingLeft}px`,
-                        paddingBottom: `${responsiveStyles.paddingBottom}px`,
+                        paddingLeft: "112px",
+                        paddingBottom: "176px",
                         paddingTop: "32px",
                         paddingRight: "32px",
                       }}
@@ -548,12 +561,7 @@ export default function PorscheAdBuilder() {
                         className="font-porsche font-bold leading-tight text-foreground text-balance"
                         style={{
                           fontSize: `${fontSize}rem`,
-                          maxWidth:
-                            windowWidth < 640
-                              ? "280px"
-                              : windowWidth < 1024
-                              ? "400px"
-                              : "512px",
+                          maxWidth: "512px",
                         }}
                       >
                         {displayTagline}
