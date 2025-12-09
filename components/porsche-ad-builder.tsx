@@ -297,23 +297,23 @@ export default function PorscheAdBuilder() {
     }
   };
 
-  // Scroll to zoom on desktop
-  const handleWheel = (e: React.WheelEvent) => {
-    if (!uploadedImage) return;
-    e.preventDefault();
-    const delta = e.deltaY * -0.001;
-    const newScale = Math.min(3, Math.max(0.5, imageScale + delta));
-    setImageScale(newScale);
-  };
+  // // Scroll to zoom on desktop
+  // const handleWheel = (e: React.WheelEvent) => {
+  //   if (!uploadedImage) return;
+  //   e.preventDefault();
+  //   const delta = e.deltaY * -0.001;
+  //   const newScale = Math.min(3, Math.max(0.5, imageScale + delta));
+  //   setImageScale(newScale);
+  // };
 
-  // Scroll to zoom text on desktop
-  const handleTextWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const delta = e.deltaY * -0.002; // Slightly more sensitive for text
-    const newFontSize = Math.min(4, Math.max(0.8, fontSize + delta));
-    setFontSize(newFontSize);
-  };
+  // // Scroll to zoom text on desktop
+  // const handleTextWheel = (e: React.WheelEvent) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   const delta = e.deltaY * -0.002; // Slightly more sensitive for text
+  //   const newFontSize = Math.min(4, Math.max(0.8, fontSize + delta));
+  //   setFontSize(newFontSize);
+  // };
 
   // Helper function to calculate distance between two touches
   const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
@@ -510,7 +510,6 @@ export default function PorscheAdBuilder() {
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
-                  onWheel={handleWheel}
                 >
                   <img
                     src={uploadedImage || "/placeholder.svg"}
@@ -544,7 +543,6 @@ export default function PorscheAdBuilder() {
                       }}
                       onMouseDown={handleTextMouseDown}
                       onTouchStart={handleTextTouchStart}
-                      onWheel={handleTextWheel}
                     >
                       <p
                         className="font-porsche font-bold leading-tight text-foreground text-balance"
