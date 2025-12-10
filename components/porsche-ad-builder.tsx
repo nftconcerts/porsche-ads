@@ -7,7 +7,14 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Download, Upload, Smartphone, Square, Maximize2 } from "lucide-react";
+import {
+  Download,
+  Upload,
+  Smartphone,
+  Square,
+  Maximize2,
+  Car,
+} from "lucide-react";
 import { PORSCHE_TAGLINES } from "@/lib/porsche-taglines";
 import { PRODUCTS } from "@/lib/products";
 import CheckoutModal from "./checkout-modal";
@@ -767,11 +774,12 @@ export default function PorscheAdBuilder() {
                   className="w-full"
                   size="lg"
                 >
-                  <Download className="mr-2 h-4 w-4" />
-                  Monthly Unlimited - $
-                  {(PRODUCTS[1].priceInCents / 100).toFixed(2)}/mo
+                  <Car className="mr-2 h-4 w-4" />
+                  Unlimited Exports - $
+                  {(PRODUCTS[1].priceInCents / 100).toFixed(2)}{" "}
+                  <span className="text-gray-500 text-[10px]">/mo</span>
                 </Button>
-                <button
+                {/* <button
                   onClick={(e) => {
                     if (uploadedImage) {
                       handleExportClick("image-3pack", {
@@ -783,7 +791,7 @@ export default function PorscheAdBuilder() {
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center mt-2 underline disabled:no-underline disabled:hover:text-muted-foreground"
                 >
                   Dev tip: Tap here to test export (bypass payment)
-                </button>
+                </button> */}
               </div>
             </Card>
           </div>
