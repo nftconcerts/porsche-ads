@@ -1,21 +1,30 @@
 export interface Product {
-  id: string
-  name: string
-  description: string
-  priceInCents: number
+  id: string;
+  name: string;
+  description: string;
+  priceInCents: number;
+  type: "one_time" | "subscription";
+  recurring?: {
+    interval: "month" | "year";
+  };
 }
 
 export const PRODUCTS: Product[] = [
   {
-    id: "jpg-export",
-    name: "JPG Export",
-    description: "Download your custom Porsche ad as a high-resolution JPG",
-    priceInCents: 100, // $1.00
+    id: "image-3pack",
+    name: "3-Pack Image Export",
+    description: "Download 3 custom Porsche ads as high-resolution images",
+    priceInCents: 550, // $5.50
+    type: "one_time",
   },
   {
-    id: "print-mail",
-    name: "Print & Mail",
-    description: "Professional print and delivery to your address",
-    priceInCents: 5000, // $50.00
+    id: "monthly-subscription",
+    name: "Monthly Unlimited",
+    description: "Unlimited image exports and saves - billed monthly",
+    priceInCents: 911, // $9.11
+    type: "subscription",
+    recurring: {
+      interval: "month",
+    },
   },
-]
+];

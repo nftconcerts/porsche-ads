@@ -1,24 +1,20 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import {
-  Download,
-  Mail,
-  Upload,
-  Smartphone,
-  Square,
-  Maximize2,
-} from "lucide-react";
+import { Download, Upload, Smartphone, Square, Maximize2 } from "lucide-react";
 import { PORSCHE_TAGLINES } from "@/lib/porsche-taglines";
 import { PRODUCTS } from "@/lib/products";
 import CheckoutModal from "./checkout-modal";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { verifyExportAccess } from "@/app/actions/verify-export";
+import { getUserCredits } from "@/lib/user-credits";
 import * as htmlToImage from "html-to-image";
 
 const FILE_TYPES = ["JPG", "JPEG", "PNG", "WEBP"];
@@ -54,6 +50,8 @@ const FORMATS = {
 };
 
 export default function PorscheAdBuilder() {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [imageScale, setImageScale] = useState(1.5);
@@ -76,13 +74,24 @@ export default function PorscheAdBuilder() {
   const [customTagline, setCustomTagline] = useState("");
   const [useCustomTagline, setUseCustomTagline] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<string | null>(null);
+  const [userCredits, setUserCredits] = useState<number>(0);
+  const [hasSubscription, setHasSubscription] = useState<boolean>(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
   const canvasRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
 
   const currentFormat = FORMATS[format]; // Get current format config
+
+  // Fetch user credits when user is authenticated
+  useEffect(() => {
+    if (user) {
+      getUserCredits(user.uid).then((data) => {
+        setUserCredits(data.credits);
+        setHasSubscription(data.subscriptionActive);
+      });
+    }
+  }, [user]);
 
   // Track window width for responsive text positioning
   React.useEffect(() => {
@@ -287,122 +296,154 @@ export default function PorscheAdBuilder() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const exportToJPG = useCallback(async () => {
-    if (!canvasRef.current || !uploadedImage) return;
+  const exportToJPG = useCallback(
+    async (skipCreditCheck = false) => {
+      if (!canvasRef.current || !uploadedImage) return;
 
-    // Detect iOS Safari (which has html-to-image issues with images)
-    const isIOS =
-      typeof navigator !== "undefined" &&
-      /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    try {
-      toast({
-        title: "Generating Image...",
-        description: "Please wait while we export your ad",
-      });
-
-      const displayWidth = canvasRef.current.offsetWidth;
-      const displayHeight = canvasRef.current.offsetHeight;
-      const targetWidth = currentFormat.width;
-      const targetHeight = currentFormat.height;
-
-      // Calculate pixel ratio with iOS safety caps
-      let pixelRatio = Math.max(
-        targetWidth / displayWidth,
-        targetHeight / displayHeight
-      );
-
-      // iOS Safari has issues with large pixel ratios and data URL images
-      if (isIOS) {
-        pixelRatio = Math.min(pixelRatio, 2); // Cap at 2x for iOS stability
-      }
-
-      console.log("[v0] Export settings:", {
-        displaySize: `${displayWidth}x${displayHeight}`,
-        targetSize: `${targetWidth}x${targetHeight}`,
-        pixelRatio: pixelRatio.toFixed(2),
-        format,
-        isIOS,
-      });
-
-      // iOS Safari workaround: do a warm-up render first
-      const doRender = () =>
-        htmlToImage.toJpeg(canvasRef.current!, {
-          quality: 0.98,
-          pixelRatio: pixelRatio,
-          cacheBust: true,
-          backgroundColor: "#ffffff",
-          skipFonts: true,
-          // Additional iOS-specific options
-          ...(isIOS && {
-            width: displayWidth,
-            height: displayHeight,
-            style: {
-              transform: "scale(1)",
-              transformOrigin: "top left",
-            },
-          }),
-        });
-
-      let dataUrl: string;
-
-      if (isIOS) {
-        // Warm-up render for iOS Safari stability
-        try {
-          await doRender();
-          console.log("[v0] iOS warm-up render completed");
-        } catch (warmupError) {
-          console.log("[v0] iOS warm-up render failed, continuing anyway");
+      // Check credits unless explicitly skipping (for dev mode or post-purchase)
+      if (!skipCreditCheck && user) {
+        const accessResult = await verifyExportAccess(user.uid);
+        if (!accessResult.allowed) {
+          toast({
+            title: "Export Not Allowed",
+            description:
+              accessResult.reason ||
+              "You need to purchase credits or a subscription",
+            variant: "destructive",
+          });
+          return;
+        }
+        // Update local credits state
+        if (accessResult.credits !== undefined && accessResult.credits >= 0) {
+          setUserCredits(accessResult.credits);
         }
       }
 
-      // Main render
-      dataUrl = await doRender();
-      console.log("[v0] Export complete, image generated");
+      // Detect iOS Safari (which has html-to-image issues with images)
+      const isIOS =
+        typeof navigator !== "undefined" &&
+        /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-      // Download the image
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
-      a.click();
-
-      toast({
-        title: "Success!",
-        description: `High-resolution ${targetWidth}x${targetHeight} image exported`,
-      });
-    } catch (error) {
-      console.error("[v0] Export failed:", error);
-
-      // More specific error messages for iOS
-      if (isIOS) {
+      try {
         toast({
-          title: "Export Failed on iOS",
-          description:
-            "Try using a smaller image or different format. iOS Safari has limitations with large exports.",
-          variant: "destructive",
+          title: "Generating Image...",
+          description: "Please wait while we export your ad",
         });
-      } else {
+
+        const displayWidth = canvasRef.current.offsetWidth;
+        const displayHeight = canvasRef.current.offsetHeight;
+        const targetWidth = currentFormat.width;
+        const targetHeight = currentFormat.height;
+
+        // Calculate pixel ratio with iOS safety caps
+        let pixelRatio = Math.max(
+          targetWidth / displayWidth,
+          targetHeight / displayHeight
+        );
+
+        // iOS Safari has issues with large pixel ratios and data URL images
+        if (isIOS) {
+          pixelRatio = Math.min(pixelRatio, 1.5); // Cap at 1.5x for iOS stability
+        }
+
+        console.log("[v0] Export settings:", {
+          displaySize: `${displayWidth}x${displayHeight}`,
+          targetSize: `${targetWidth}x${targetHeight}`,
+          pixelRatio: pixelRatio.toFixed(2),
+          format,
+          isIOS,
+        });
+
+        // iOS Safari workaround: do a warm-up render first
+        const doRender = () =>
+          htmlToImage.toJpeg(canvasRef.current!, {
+            quality: 0.98,
+            pixelRatio: pixelRatio,
+            cacheBust: true,
+            backgroundColor: "#ffffff",
+            skipFonts: true,
+            // Additional iOS-specific options
+            ...(isIOS && {
+              width: displayWidth,
+              height: displayHeight,
+              style: {
+                transform: "scale(1)",
+                transformOrigin: "top left",
+              },
+            }),
+          });
+
+        let dataUrl: string;
+
+        if (isIOS) {
+          // Warm-up render for iOS Safari stability
+          try {
+            await doRender();
+            console.log("[v0] iOS warm-up render completed");
+          } catch (warmupError) {
+            console.log("[v0] iOS warm-up render failed, continuing anyway");
+          }
+        }
+
+        // Main render
+        dataUrl = await doRender();
+        console.log("[v0] Export complete, image generated");
+
+        // Download the image
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
+        a.click();
+
         toast({
-          title: "Export Failed",
-          description: "Please try again",
-          variant: "destructive",
+          title: "Success!",
+          description: `High-resolution ${targetWidth}x${targetHeight} image exported`,
         });
+      } catch (error) {
+        console.error("[v0] Export failed:", error);
+
+        // More specific error messages for iOS
+        if (isIOS) {
+          toast({
+            title: "Export Failed on iOS",
+            description:
+              "Try using a smaller image or different format. iOS Safari has limitations with large exports.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Export Failed",
+            description: "Please try again",
+            variant: "destructive",
+          });
+        }
       }
-    }
-  }, [uploadedImage, format, currentFormat, toast]);
+    },
+    [uploadedImage, format, currentFormat, toast, user]
+  );
 
-  const handleCheckoutSuccess = () => {
-    if (checkoutProduct === "jpg-export") {
-      exportToJPG();
+  const handleCheckoutSuccess = async () => {
+    // Refresh credits first
+    if (user) {
+      const creditData = await getUserCredits(user.uid);
+      setUserCredits(creditData.credits);
+      setHasSubscription(creditData.subscriptionActive);
+    }
+
+    if (checkoutProduct === "image-3pack") {
+      exportToJPG(true); // Skip credit check since they just purchased
       toast({
         title: "Download Started",
-        description: "Your Porsche ad is being downloaded",
+        description:
+          "Your Porsche ad is downloading now. You have credits for 2 more exports.",
       });
-    } else {
+    } else if (checkoutProduct === "monthly-subscription") {
       toast({
-        title: "Order Confirmed",
-        description: "Your print will be mailed to you soon",
+        title: "Subscription Active",
+        description:
+          "You now have unlimited exports. Your image is downloading.",
       });
+      exportToJPG(true); // Skip credit check since they just subscribed
     }
   };
 
@@ -411,16 +452,11 @@ export default function PorscheAdBuilder() {
   const handleExportClick = (productId: string, e: React.MouseEvent) => {
     if (e.shiftKey) {
       console.log("[v0] Dev mode: Bypassing payment for testing");
-      if (productId === "jpg-export") {
-        exportToJPG();
+      if (productId === "image-3pack" || productId === "monthly-subscription") {
+        exportToJPG(true); // Skip credit check in dev mode
         toast({
           title: "Dev Mode: Download Started",
-          description: "Testing JPG export without payment",
-        });
-      } else {
-        toast({
-          title: "Dev Mode: Print Order Simulated",
-          description: "Testing print order flow without payment",
+          description: "Testing export without payment",
         });
       }
       return;
@@ -701,32 +737,44 @@ export default function PorscheAdBuilder() {
 
             <Card className="p-6">
               <h2 className="mb-4 font-semibold text-lg">Export Your Ad</h2>
+
+              {user && (hasSubscription || userCredits > 0) && (
+                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                    {hasSubscription ? (
+                      <>🎉 Unlimited Exports Active</>
+                    ) : (
+                      <>Credits remaining: {userCredits}</>
+                    )}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <Button
-                  onClick={(e) => handleExportClick("jpg-export", e)}
+                  onClick={(e) => handleExportClick("image-3pack", e)}
                   disabled={!uploadedImage}
                   className="w-full"
                   size="lg"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Digital Download - $
-                  {(PRODUCTS[0].priceInCents / 100).toFixed(2)}
+                  3-Pack Bundle - ${(PRODUCTS[0].priceInCents / 100).toFixed(2)}
                 </Button>
                 <Button
-                  onClick={(e) => handleExportClick("print-mail", e)}
+                  onClick={(e) => handleExportClick("monthly-subscription", e)}
                   disabled={!uploadedImage}
                   variant="secondary"
                   className="w-full"
                   size="lg"
                 >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Premium Print & Ship - $
-                  {(PRODUCTS[1].priceInCents / 100).toFixed(2)}
+                  <Download className="mr-2 h-4 w-4" />
+                  Monthly Unlimited - $
+                  {(PRODUCTS[1].priceInCents / 100).toFixed(2)}/mo
                 </Button>
                 <button
                   onClick={(e) => {
                     if (uploadedImage) {
-                      handleExportClick("jpg-export", {
+                      handleExportClick("image-3pack", {
                         shiftKey: true,
                       } as React.MouseEvent);
                     }

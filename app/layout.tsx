@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Footer from "@/components/footer";
+import ClientProvider from "@/components/ClientProvider";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -32,7 +33,7 @@ export default function RootLayout({
         href="/favicon/favicon-32x32.png"
       />
       <body className={`font-arial antialiased`}>
-        {children}
+        <ClientProvider>{children}</ClientProvider>
         <Analytics />
         <Footer />
       </body>
