@@ -1,11 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/hooks/use-auth";
 
 const Footer = () => {
   const [hovered, setHovered] = useState(false);
-  const { user } = useAuth();
 
   return (
     <div
@@ -13,10 +11,6 @@ const Footer = () => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Link href="/login" className="hover:text-gray-300 transition-colors">
-        {user ? "Account" : "Sign In"}
-      </Link>
-      <span>•</span>
       {hovered ? (
         <Link
           href="https://jimmygpt.com"

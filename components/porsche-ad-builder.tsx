@@ -765,7 +765,8 @@ export default function PorscheAdBuilder() {
                   size="lg"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  3-Pack Bundle - ${(PRODUCTS[0].priceInCents / 100).toFixed(2)}
+                  This Image + 2 More for Free - $
+                  {(PRODUCTS[0].priceInCents / 100).toFixed(2)}
                 </Button>
                 <Button
                   onClick={(e) => handleExportClick("monthly-subscription", e)}
