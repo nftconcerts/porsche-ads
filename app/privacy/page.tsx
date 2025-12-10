@@ -17,13 +17,13 @@ export default function PrivacyPage() {
             &quot;Site&quot;) and does not govern privacy practices associated
             with offline activities. These are the guidelines used by NFT
             Concerts Inc. (&quot;COMPANY&quot;) (currently doing business as
-            &quot;Porsche Ad Builder&quot;) in protecting your privacy. The
-            Site is only directed to those in the United States; however it may
-            be accessed from many different places around the world. By
-            accessing the Site, you agree that the laws of Delaware apply to all
-            matters related to your interaction with the Site. COMPANY reserves
-            the right to modify these terms at any time and in any manner,
-            without prior notice.
+            &quot;Porsche Ad Builder&quot;) in protecting your privacy. The Site
+            is only directed to those in the United States; however it may be
+            accessed from many different places around the world. By accessing
+            the Site, you agree that the laws of Delaware apply to all matters
+            related to your interaction with the Site. COMPANY reserves the
+            right to modify these terms at any time and in any manner, without
+            prior notice.
           </p>
           <h4 className="font-bold text-xl mb-4 text-white">Rights</h4>
           <p className="mb-4">
@@ -63,9 +63,7 @@ export default function PrivacyPage() {
             confirmation of successful payments and basic transaction details
             necessary to provide our services.
           </p>
-          <h4 className="font-bold text-xl mb-4 text-white">
-            Uploaded Images
-          </h4>
+          <h4 className="font-bold text-xl mb-4 text-white">Uploaded Images</h4>
           <p className="mb-4">
             Images you upload to create your custom advertisements are processed
             in your browser and are not permanently stored on our servers unless
@@ -107,13 +105,11 @@ export default function PrivacyPage() {
           </h4>
           <p className="mb-4">
             We use the following third-party services to operate our Site:
-            <br />
-            • <strong>Firebase</strong> (Google) - for authentication and
+            <br />• <strong>Firebase</strong> (Google) - for authentication and
             database services
-            <br />
-            • <strong>Stripe</strong> - for payment processing
-            <br />
-            • <strong>Google Sign-In</strong> - for optional authentication
+            <br />• <strong>Stripe</strong> - for payment processing
+            <br />• <strong>Google Sign-In</strong> - for optional
+            authentication
             <br />
             Each of these services has their own privacy policies that govern
             how they collect and use data. We encourage you to review their

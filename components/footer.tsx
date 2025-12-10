@@ -15,7 +15,10 @@ const Footer = () => {
               Terms of Service
             </Link>
             <span>•</span>
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            <Link
+              href="/privacy"
+              className="hover:text-white transition-colors"
+            >
               Privacy Policy
             </Link>
           </div>
@@ -35,7 +38,8 @@ const Footer = () => {
               </Link>
             ) : (
               <span>
-                Copyright {new Date().getFullYear()} p-ads.com. All Rights Reserved.
+                Copyright {new Date().getFullYear()} p-ads.com. All Rights
+                Reserved.
               </span>
             )}
           </div>
@@ -67,14 +71,18 @@ const Footer = () => {
               </Link>
             ) : (
               <span>
-                Copyright {new Date().getFullYear()} p-ads.com. All Rights Reserved.
+                Copyright {new Date().getFullYear()} p-ads.com. All Rights
+                Reserved.
               </span>
             )}
           </div>
 
           {/* Right: Privacy */}
           <div className="flex-shrink-0">
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            <Link
+              href="/privacy"
+              className="hover:text-white transition-colors"
+            >
               Privacy Policy
             </Link>
           </div>
