@@ -475,14 +475,14 @@ export default function PorscheAdBuilder() {
   return (
     <div className="min-h-screen p-6 bg-[#0E0E12]">
       <div className="mx-auto max-w-7xl">
-        <header className="mb-8 text-center">
+        {/* <header className="mb-8 text-center">
           <h1 className="mb-2 font-arial text-4xl font-bold tracking-tight text-white">
             Porsche Ad Builder
           </h1>
           <p className="text-gray-300">
             Create your own classic Porsche advertisement
           </p>
-        </header>
+        </header> */}
 
         <div className="grid gap-8 lg:grid-cols-[1fr,400px]">
           <div className="space-y-6">
