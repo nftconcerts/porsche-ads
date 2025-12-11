@@ -1,24 +1,34 @@
-"use client"
+"use client";
 
-import { useCallback } from "react"
-import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js"
-import { loadStripe } from "@stripe/stripe-js"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { startCheckoutSession } from "@/app/actions/stripe"
+import { useCallback } from "react";
+import {
+  EmbeddedCheckout,
+  EmbeddedCheckoutProvider,
+} from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { startCheckoutSession } from "@/app/actions/stripe";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 interface CheckoutModalProps {
-  isOpen: boolean
-  onClose: () => void
-  productId: string
-  onSuccess: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  productId: string;
+  onSuccess: () => void;
 }
 
-export default function CheckoutModal({ isOpen, onClose, productId, onSuccess }: CheckoutModalProps) {
+export default function CheckoutModal({
+  isOpen,
+  onClose,
+  productId,
+  onSuccess,
+}: CheckoutModalProps) {
   const fetchClientSecret = useCallback(async () => {
-    return await startCheckoutSession(productId)
-  }, [productId])
+    return await startCheckoutSession(productId, true); // Enable promotion codes
+  }, [productId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -29,8 +39,8 @@ export default function CheckoutModal({ isOpen, onClose, productId, onSuccess }:
           options={{
             fetchClientSecret,
             onComplete: () => {
-              onSuccess()
-              setTimeout(() => onClose(), 2000)
+              onSuccess();
+              setTimeout(() => onClose(), 2000);
             },
           }}
         >
@@ -38,5 +48,5 @@ export default function CheckoutModal({ isOpen, onClose, productId, onSuccess }:
         </EmbeddedCheckoutProvider>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

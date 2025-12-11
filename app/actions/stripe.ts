@@ -3,7 +3,10 @@
 import { stripe } from "@/lib/stripe";
 import { PRODUCTS } from "@/lib/products";
 
-export async function startCheckoutSession(productId: string) {
+export async function startCheckoutSession(
+  productId: string,
+  allowPromotionCodes = true
+) {
   const product = PRODUCTS.find((p) => p.id === productId);
   if (!product) {
     throw new Error(`Product with id "${productId}" not found`);
@@ -12,6 +15,8 @@ export async function startCheckoutSession(productId: string) {
   const sessionConfig: any = {
     ui_mode: "embedded",
     redirect_on_completion: "never",
+    allow_promotion_codes: allowPromotionCodes,
+    payment_method_types: ["card", "link", "apple_pay", "google_pay"],
     line_items: [
       {
         price_data: {
