@@ -22,6 +22,19 @@ export default function Lockscreen() {
     }
   }, []);
 
+  useEffect(() => {
+    // Hide scrollbar when lockscreen is active
+    if (!isUnlocked && !isPublicRoute) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isUnlocked, isPublicRoute]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === "trade4gt3") {

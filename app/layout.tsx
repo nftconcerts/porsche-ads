@@ -11,9 +11,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Porsche Ad Builder",
+  title: "p-ads.com",
   description: "Create your own classic Porsche advertisement",
-  generator: "v0.app",
+  themeColor: "#0E0E12",
   icons: {
     // ... existing code ...
   },

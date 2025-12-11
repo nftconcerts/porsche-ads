@@ -15,15 +15,14 @@ export default function PrivacyPage() {
             This Privacy Policy applies to the website:{" "}
             <span className="underline">porsche-ads.vercel.app</span> (the
             &quot;Site&quot;) and does not govern privacy practices associated
-            with offline activities. These are the guidelines used by NFT
-            Concerts Inc. (&quot;COMPANY&quot;) (currently doing business as
-            &quot;Porsche Ad Builder&quot;) in protecting your privacy. The Site
-            is only directed to those in the United States; however it may be
-            accessed from many different places around the world. By accessing
-            the Site, you agree that the laws of Delaware apply to all matters
-            related to your interaction with the Site. COMPANY reserves the
-            right to modify these terms at any time and in any manner, without
-            prior notice.
+            with offline activities. These are the guidelines used by Sheep LLC.
+            (&quot;COMPANY&quot;) (currently doing business as
+            &quot;p-ads.com&quot;) in protecting your privacy. The Site is only
+            directed to those in the United States; however it may be accessed
+            from many different places around the world. By accessing the Site,
+            you agree that the laws of Delaware apply to all matters related to
+            your interaction with the Site. COMPANY reserves the right to modify
+            these terms at any time and in any manner, without prior notice.
           </p>
           <h4 className="font-bold text-xl mb-4 text-white">Rights</h4>
           <p className="mb-4">
@@ -134,8 +133,8 @@ export default function PrivacyPage() {
             active or as needed to provide you services. You have the right to
             request deletion of your account and all associated data at any
             time. To delete your data, please contact us at{" "}
-            <a href="mailto:jimmy@nftconcerts.com" className="underline">
-              jimmy@nftconcerts.com
+            <a href="mailto:jimmy@jimmygpt.com" className="underline">
+              jimmy@jimmygpt.com
             </a>
             . Upon request, we will delete your account and all associated data
             from our systems, subject to any legal obligations to retain certain
@@ -147,8 +146,8 @@ export default function PrivacyPage() {
           <p className="mb-4">
             If you have any comments, concerns or questions regarding this
             privacy policy, please contact us at{" "}
-            <a href="mailto:jimmy@nftconcerts.com" className="underline">
-              jimmy@nftconcerts.com
+            <a href="mailto:jimmy@jimmygpt.com" className="underline">
+              jimmy@jimmygpt.com
             </a>
             .
           </p>

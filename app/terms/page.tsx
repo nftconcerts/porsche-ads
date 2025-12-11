@@ -9,16 +9,14 @@ export default function TermsPage() {
         </h1>
         <div className="w-11/12 lg:w-3/4 max-w-4xl">
           <p className="mb-4 font-bold underline">
-            By using Porsche Ad Builder, you agree to the following terms of
-            service:
+            By using p-ads.com, you agree to the following terms of service:
           </p>
           <p className="mb-4">
-            NFT Concerts Inc. currently doing business as &quot;Porsche Ad
-            Builder&quot; (&quot;COMPANY&quot;) requires that all visitors
-            (&quot;you&quot;) to the COMPANY website (porsche-ads.vercel.app)
-            (&quot;Site&quot;) abide by the following Terms of Use
-            (&quot;TOU&quot;). By accessing and using the Site you indicate your
-            agreement to these TOU.
+            Sheep LLC. currently doing business as &quot;p-ads.com&quot;
+            (&quot;COMPANY&quot;) requires that all visitors (&quot;you&quot;)
+            to the COMPANY website (p-ads.com) (&quot;Site&quot;) abide by the
+            following Terms of Use (&quot;TOU&quot;). By accessing and using the
+            Site you indicate your agreement to these TOU.
             <span className="font-bold">
               {" "}
               IF YOU DO NOT AGREE TO THESE TOU, PLEASE DO NOT ACCESS OR USE THE
@@ -256,8 +254,8 @@ export default function TermsPage() {
             your data will clear the current database of any and all records
             associated with your account. This action cannot be undone. To
             delete your data, please contact us at{" "}
-            <a href="mailto:jimmy@nftconcerts.com" className="underline">
-              jimmy@nftconcerts.com
+            <a href="mailto:jimmy@jimmygpt.com" className="underline">
+              jimmy@jimmygpt.com
             </a>
             .{" "}
           </p>
@@ -267,8 +265,8 @@ export default function TermsPage() {
           <p className="mb-4">
             If you have any comments, concerns or questions regarding these TOU,
             please contact us at{" "}
-            <a href="mailto:jimmy@nftconcerts.com" className="underline">
-              jimmy@nftconcerts.com
+            <a href="mailto:jimmy@jimmygpt.com" className="underline">
+              jimmy@jimmygpt.com
             </a>
             .
           </p>
