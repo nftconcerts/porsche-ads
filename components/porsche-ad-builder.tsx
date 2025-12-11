@@ -18,11 +18,13 @@ import {
 import { PORSCHE_TAGLINES } from "@/lib/porsche-taglines";
 import { PRODUCTS } from "@/lib/products";
 import CheckoutModal from "./checkout-modal";
+import AuthModal from "./auth-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { verifyExportAccess } from "@/app/actions/verify-export";
 import { getUserCredits } from "@/lib/user-credits";
 import * as htmlToImage from "html-to-image";
+import { auth } from "@/lib/firebase";
 
 const FILE_TYPES = ["JPG", "JPEG", "PNG", "WEBP"];
 const MAX_FILE_SIZE = 10; // in MB
@@ -86,7 +88,11 @@ export default function PorscheAdBuilder() {
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [hasExportedOnce, setHasExportedOnce] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const displayTagline = useCustomTagline ? customTagline : selectedTagline;
 
   const currentFormat = FORMATS[format]; // Get current format config
 
@@ -307,8 +313,15 @@ export default function PorscheAdBuilder() {
     async (skipCreditCheck = false) => {
       if (!canvasRef.current || !uploadedImage) return;
 
-      // Check credits unless explicitly skipping (for dev mode or post-purchase)
-      if (!skipCreditCheck && user) {
+      // New flow: First export is free with account creation
+      // If not authenticated and haven't exported yet, show auth modal
+      if (!user && !hasExportedOnce) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      // Check credits for subsequent exports (unless explicitly skipping)
+      if (!skipCreditCheck && user && hasExportedOnce) {
         const accessResult = await verifyExportAccess(user.uid);
         if (!accessResult.allowed) {
           toast({
@@ -396,11 +409,47 @@ export default function PorscheAdBuilder() {
         dataUrl = await doRender();
         console.log("[v0] Export complete, image generated");
 
+        // Upload to Cloudflare if user is authenticated
+        if (user) {
+          try {
+            const idToken = await user.getIdToken();
+
+            const uploadResponse = await fetch("/api/upload-ad", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({
+                imageData: dataUrl,
+                format,
+                tagline: displayTagline,
+              }),
+            });
+
+            if (uploadResponse.ok) {
+              const { url } = await uploadResponse.json();
+              console.log("[v0] Image uploaded to Cloudflare:", url);
+            } else {
+              console.warn(
+                "[v0] Failed to upload to Cloudflare, continuing with download"
+              );
+            }
+          } catch (uploadError) {
+            console.warn("[v0] Upload error (non-blocking):", uploadError);
+          }
+        }
+
         // Download the image
         const a = document.createElement("a");
         a.href = dataUrl;
         a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
         a.click();
+
+        // Mark that user has exported once
+        if (!hasExportedOnce) {
+          setHasExportedOnce(true);
+        }
 
         toast({
           title: "Success!",
@@ -426,7 +475,15 @@ export default function PorscheAdBuilder() {
         }
       }
     },
-    [uploadedImage, format, currentFormat, toast, user]
+    [
+      uploadedImage,
+      format,
+      currentFormat,
+      toast,
+      user,
+      hasExportedOnce,
+      displayTagline,
+    ]
   );
 
   const handleCheckoutSuccess = async () => {
@@ -454,7 +511,19 @@ export default function PorscheAdBuilder() {
     }
   };
 
-  const displayTagline = useCustomTagline ? customTagline : selectedTagline;
+  const handleFreeExport = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    exportToJPG(true); // Skip credit check for free export
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // After successful auth, trigger the export
+    exportToJPG(true);
+  };
 
   const handleExportClick = (productId: string, e: React.MouseEvent) => {
     if (e.shiftKey) {
@@ -743,8 +812,12 @@ export default function PorscheAdBuilder() {
             </Card>
 
             <Card className="p-6">
-              <h2 className="mb-4 font-semibold text-lg">Export Your Ad</h2>
-
+              <h2 className="mb-0 font-semibold text-lg">Export Your Ad</h2>
+              {!hasExportedOnce && !user && (
+                <p className="text-sm font-medium text-[#444] dark:text-blue-200">
+                  Create an Account to Download Your Image for Free!
+                </p>
+              )}
               {user && (hasSubscription || userCredits > 0) && (
                 <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                   <p className="text-sm font-medium text-green-800 dark:text-green-200">
@@ -758,41 +831,46 @@ export default function PorscheAdBuilder() {
               )}
 
               <div className="space-y-3">
-                <Button
-                  onClick={(e) => handleExportClick("image-3pack", e)}
-                  disabled={!uploadedImage}
-                  className="w-full"
-                  size="lg"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  This Image + 2 More for Free - $
-                  {(PRODUCTS[0].priceInCents / 100).toFixed(2)}
-                </Button>
-                <Button
-                  onClick={(e) => handleExportClick("monthly-subscription", e)}
-                  disabled={!uploadedImage}
-                  variant="secondary"
-                  className="w-full"
-                  size="lg"
-                >
-                  <Car className="mr-2 h-4 w-4" />
-                  Unlimited Exports - $
-                  {(PRODUCTS[1].priceInCents / 100).toFixed(2)}{" "}
-                  <span className="text-gray-500 text-[10px]">/mo</span>
-                </Button>
-                {/* <button
-                  onClick={(e) => {
-                    if (uploadedImage) {
-                      handleExportClick("image-3pack", {
-                        shiftKey: true,
-                      } as React.MouseEvent);
-                    }
-                  }}
-                  disabled={!uploadedImage}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors text-center mt-2 underline disabled:no-underline disabled:hover:text-muted-foreground"
-                >
-                  Dev tip: Tap here to test export (bypass payment)
-                </button> */}
+                {!hasExportedOnce && (
+                  <Button
+                    onClick={handleFreeExport}
+                    disabled={!uploadedImage}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    size="lg"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {user ? "Download Your Image" : "Download Your Image"}
+                  </Button>
+                )}
+
+                {hasExportedOnce && (
+                  <>
+                    <Button
+                      onClick={(e) => handleExportClick("image-3pack", e)}
+                      disabled={!uploadedImage}
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      This Image + 2 More - $
+                      {(PRODUCTS[0].priceInCents / 100).toFixed(2)}
+                    </Button>
+                    <Button
+                      onClick={(e) =>
+                        handleExportClick("monthly-subscription", e)
+                      }
+                      disabled={!uploadedImage}
+                      variant="secondary"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Car className="mr-2 h-4 w-4" />
+                      Unlimited Exports - $
+                      {(PRODUCTS[1].priceInCents / 100).toFixed(2)}{" "}
+                      <span className="text-gray-500 text-[10px]">/mo</span>
+                    </Button>
+                  </>
+                )}
               </div>
             </Card>
           </div>
@@ -807,6 +885,13 @@ export default function PorscheAdBuilder() {
           onSuccess={handleCheckoutSuccess}
         />
       )}
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+        mode="signup"
+      />
     </div>
   );
 }
