@@ -47,7 +47,10 @@ export async function POST(req: NextRequest) {
     const filename = `porsche-ad-${format}-${Date.now()}.jpg`;
 
     // Upload to Cloudflare
-    const cloudflareResponse = await uploadToCloudflareImages(buffer, filename);
+    const cloudflareResponse = await uploadToCloudflareImages(
+      buffer.buffer,
+      filename
+    );
 
     if (!cloudflareResponse.success) {
       console.error("Cloudflare upload failed:", cloudflareResponse.errors);
