@@ -1,5 +1,5 @@
 "use client";
-
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
@@ -9,6 +9,11 @@ import Link from "next/link";
 
 export default function Header() {
   const { user, loading } = useAuth();
+  const [path, setPath] = useState("");
+
+  useEffect(() => {
+    setPath(window.location.pathname);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -24,16 +29,29 @@ export default function Header() {
         <div className="flex items-center justify-between gap-2">
           {/* Left: Gallery Link */}
           <div className="flex-shrink-0">
-            <Link href="/gallery">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-              >
-                <Images className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Gallery</span>
-              </Button>
-            </Link>
+            {(path !== "/gallery" && (
+              <Link href="/gallery">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                >
+                  <Images className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Gallery</span>
+                </Button>
+              </Link>
+            )) || (
+              <Link href="/">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                >
+                  <Images className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Create Your Ad</span>
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Center: Title */}
