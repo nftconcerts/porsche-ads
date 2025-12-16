@@ -37,7 +37,7 @@ export default function Lockscreen() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "please-approve") {
+    if (password === "gt3") {
       sessionStorage.setItem("app_unlocked", "true");
       setIsUnlocked(true);
       setError(false);
