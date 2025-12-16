@@ -515,7 +515,9 @@ export default function PorscheAdBuilder() {
   // };
 
   const handleExport = () => {
+    console.log("[v0] handleExport called, user:", user);
     if (!user) {
+      console.log("[v0] No user, showing auth modal");
       setShowAuthModal(true);
       return;
     }
@@ -541,38 +543,33 @@ export default function PorscheAdBuilder() {
         </header> */}
 
         <div className="grid gap-8 lg:grid-cols-[1fr,400px]">
-          <div className="space-y-6">
-            <Card className="p-4">
-              <Label className="mb-3 block text-sm font-semibold">
+          <div className="space-y-3">
+            {/* <Card className="p-4"> */}
+            {/* <Label className="mb-3 block text-sm font-semibold">
                 Select Format
-              </Label>
-              <div className="grid grid-cols-3 gap-3">
-                {(
-                  Object.entries(FORMATS) as [
-                    FormatType,
-                    typeof FORMATS.mobile
-                  ][]
-                ).map(([key, fmt]) => {
-                  const Icon = fmt.icon;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setFormat(key)}
-                      className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all hover:bg-accent ${
-                        format === key
-                          ? "border-primary bg-accent"
-                          : "border-border"
-                      }`}
-                    >
-                      <Icon className="h-6 w-6" />
-                      <span className="text-xs font-medium text-center">
+              </Label> */}
+            <div className="grid grid-cols-3 gap-3">
+              {(
+                Object.entries(FORMATS) as [FormatType, typeof FORMATS.mobile][]
+              ).map(([key, fmt]) => {
+                const Icon = fmt.icon;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setFormat(key)}
+                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-2 transition-all  hover:bg-gray-300 ${
+                      format === key ? "bg-[#aaa]" : "bg-white"
+                    }`}
+                  >
+                    <Icon className="h-6 w-6" />
+                    {/* <span className="text-xs font-medium text-center">
                         {fmt.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
+                      </span> */}
+                  </button>
+                );
+              })}
+            </div>
+            {/* </Card> */}
 
             <Card
               className="overflow-hidden p-0 bg-transparent border-0 shadow-2xl max-h-[80vh] min-h-[100px] mx-auto"
