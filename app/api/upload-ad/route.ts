@@ -43,6 +43,21 @@ export async function POST(req: NextRequest) {
     const base64Data = imageData.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, "base64");
 
+    // Check file size (Vercel has 5MB limit for serverless functions)
+    const sizeInMB = buffer.length / (1024 * 1024);
+    if (sizeInMB > 4.5) {
+      // Use 4.5MB to be safe
+      console.error(`Image too large: ${sizeInMB.toFixed(2)}MB`);
+      return NextResponse.json(
+        {
+          error: `Image too large (${sizeInMB.toFixed(
+            1
+          )}MB). Please use a smaller image or lower quality settings.`,
+        },
+        { status: 413 }
+      );
+    }
+
     // Generate filename
     const filename = `porsche-ad-${format}-${Date.now()}.jpg`;
 
@@ -71,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save to Firestore
-    await adminDb.collection("porsche-ads").add({
+    const docRef = await adminDb.collection("porsche-ads").add({
       url: publicUrl,
       userId,
       userEmail,
@@ -80,6 +95,13 @@ export async function POST(req: NextRequest) {
       timestamp: Date.now(),
       archived: false,
     });
+
+    console.log(
+      "[upload-ad] Saved to Firestore with ID:",
+      docRef.id,
+      "for userId:",
+      userId
+    );
 
     return NextResponse.json({
       success: true,

@@ -27,7 +27,7 @@ import * as htmlToImage from "html-to-image";
 import { auth } from "@/lib/firebase";
 
 const FILE_TYPES = ["JPG", "JPEG", "PNG", "WEBP"];
-const MAX_FILE_SIZE = 10; // in MB
+const MAX_FILE_SIZE = 5; // in MB (reduced to avoid Vercel export limits)
 
 type FormatType = "mobile" | "square" | "poster";
 
@@ -83,28 +83,28 @@ export default function PorscheAdBuilder() {
   const [customTagline, setCustomTagline] = useState("");
   const [useCustomTagline, setUseCustomTagline] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<string | null>(null);
-  const [userCredits, setUserCredits] = useState<number>(0);
-  const [hasSubscription, setHasSubscription] = useState<boolean>(false);
+  // const [userCredits, setUserCredits] = useState<number>(0);
+  // const [hasSubscription, setHasSubscription] = useState<boolean>(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [hasExportedOnce, setHasExportedOnce] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const displayTagline = useCustomTagline ? customTagline : selectedTagline;
 
   const currentFormat = FORMATS[format]; // Get current format config
 
-  // Fetch user credits when user is authenticated
-  useEffect(() => {
-    if (user) {
-      getUserCredits(user.uid).then((data) => {
-        setUserCredits(data.credits);
-        setHasSubscription(data.subscriptionActive);
-      });
-    }
-  }, [user]);
+  // Fetch user credits when user is authenticated (COMMENTED OUT FOR PREVIEW MODE)
+  // useEffect(() => {
+  //   if (user) {
+  //     getUserCredits(user.uid).then((data) => {
+  //       setUserCredits(data.credits);
+  //       setHasSubscription(data.subscriptionActive);
+  //     });
+  //   }
+  // }, [user]);
 
   // Track window width for responsive text positioning
   React.useEffect(() => {
@@ -116,28 +116,45 @@ export default function PorscheAdBuilder() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleFileChange = useCallback((file: File | File[]) => {
-    // Handle single file or array of files - take the first file if array
-    const selectedFile = Array.isArray(file) ? file[0] : file;
+  const handleFileChange = useCallback(
+    (file: File | File[]) => {
+      // Handle single file or array of files - take the first file if array
+      const selectedFile = Array.isArray(file) ? file[0] : file;
 
-    if (!selectedFile) return;
+      if (!selectedFile) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setUploadedImage(e.target?.result as string);
-      setImagePosition({ x: 0, y: 0 });
-      setImageScale(1.5);
-      setFontSize(1.8);
-    };
-    reader.readAsDataURL(selectedFile);
-  }, []);
+      // Check file size before loading (5MB limit to avoid export issues)
+      const sizeInMB = selectedFile.size / (1024 * 1024);
+      if (sizeInMB > 5) {
+        toast({
+          title: "File Too Large",
+          description: `Image is ${sizeInMB.toFixed(
+            1
+          )}MB. Please use an image smaller than 5MB to ensure successful export.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setUploadedImage(e.target?.result as string);
+        setImagePosition({ x: 0, y: 0 });
+        setImageScale(1.5);
+        setFontSize(1.8);
+      };
+      reader.readAsDataURL(selectedFile);
+    },
+    [toast]
+  );
 
   const handleFileError = useCallback(
     (error: string) => {
+      console.log("[v0] File upload error:", error);
       if (error.includes("size")) {
         toast({
-          title: "File Too Large",
-          description: `Please upload an image smaller than ${MAX_FILE_SIZE}MB`,
+          title: "Image Too Large",
+          description: `Please use an image smaller than ${MAX_FILE_SIZE}MB. Large files may cause export issues.`,
           variant: "destructive",
         });
       } else {
@@ -309,236 +326,206 @@ export default function PorscheAdBuilder() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const exportToJPG = useCallback(
-    async (skipCreditCheck = false) => {
-      if (!canvasRef.current || !uploadedImage) return;
+  const exportToJPG = useCallback(async () => {
+    if (!canvasRef.current || !uploadedImage) return;
 
-      // New flow: First export is free with account creation
-      // If not authenticated and haven't exported yet, show auth modal
-      if (!user && !hasExportedOnce) {
-        setShowAuthModal(true);
-        return;
-      }
-
-      // Check credits for subsequent exports (unless explicitly skipping)
-      if (!skipCreditCheck && user && hasExportedOnce) {
-        const accessResult = await verifyExportAccess(user.uid);
-        if (!accessResult.allowed) {
-          toast({
-            title: "Export Not Allowed",
-            description:
-              accessResult.reason ||
-              "You need to purchase credits or a subscription",
-            variant: "destructive",
-          });
-          return;
-        }
-        // Update local credits state
-        if (accessResult.credits !== undefined && accessResult.credits >= 0) {
-          setUserCredits(accessResult.credits);
-        }
-      }
-
-      // Detect iOS Safari (which has html-to-image issues with images)
-      const isIOS =
-        typeof navigator !== "undefined" &&
-        /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-      try {
-        toast({
-          title: "Generating Image...",
-          description: "Please wait while we export your ad",
-        });
-
-        const displayWidth = canvasRef.current.offsetWidth;
-        const displayHeight = canvasRef.current.offsetHeight;
-        const targetWidth = currentFormat.width;
-        const targetHeight = currentFormat.height;
-
-        // Calculate pixel ratio with iOS safety caps
-        let pixelRatio = Math.max(
-          targetWidth / displayWidth,
-          targetHeight / displayHeight
-        );
-
-        // iOS Safari has issues with large pixel ratios and data URL images
-        if (isIOS) {
-          pixelRatio = Math.min(pixelRatio, 1.5); // Cap at 1.5x for iOS stability
-        }
-
-        console.log("[v0] Export settings:", {
-          displaySize: `${displayWidth}x${displayHeight}`,
-          targetSize: `${targetWidth}x${targetHeight}`,
-          pixelRatio: pixelRatio.toFixed(2),
-          format,
-          isIOS,
-        });
-
-        // iOS Safari workaround: do a warm-up render first
-        const doRender = () =>
-          htmlToImage.toJpeg(canvasRef.current!, {
-            quality: 0.98,
-            pixelRatio: pixelRatio,
-            cacheBust: true,
-            backgroundColor: "#ffffff",
-            skipFonts: true,
-            // Additional iOS-specific options
-            ...(isIOS && {
-              width: displayWidth,
-              height: displayHeight,
-              style: {
-                transform: "scale(1)",
-                transformOrigin: "top left",
-              },
-            }),
-          });
-
-        let dataUrl: string;
-
-        if (isIOS) {
-          // Warm-up render for iOS Safari stability
-          try {
-            await doRender();
-            console.log("[v0] iOS warm-up render completed");
-          } catch (warmupError) {
-            console.log("[v0] iOS warm-up render failed, continuing anyway");
-          }
-        }
-
-        // Main render
-        dataUrl = await doRender();
-        console.log("[v0] Export complete, image generated");
-
-        // Upload to Cloudflare if user is authenticated
-        if (user) {
-          try {
-            const idToken = await user.getIdToken();
-
-            const uploadResponse = await fetch("/api/upload-ad", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${idToken}`,
-              },
-              body: JSON.stringify({
-                imageData: dataUrl,
-                format,
-                tagline: displayTagline,
-              }),
-            });
-
-            if (uploadResponse.ok) {
-              const { url } = await uploadResponse.json();
-              console.log("[v0] Image uploaded to Cloudflare:", url);
-            } else {
-              console.warn(
-                "[v0] Failed to upload to Cloudflare, continuing with download"
-              );
-            }
-          } catch (uploadError) {
-            console.warn("[v0] Upload error (non-blocking):", uploadError);
-          }
-        }
-
-        // Download the image
-        const a = document.createElement("a");
-        a.href = dataUrl;
-        a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
-        a.click();
-
-        // Mark that user has exported once
-        if (!hasExportedOnce) {
-          setHasExportedOnce(true);
-        }
-
-        toast({
-          title: "Success!",
-          description: `High-resolution ${targetWidth}x${targetHeight} image exported`,
-        });
-      } catch (error) {
-        console.error("[v0] Export failed:", error);
-
-        // More specific error messages for iOS
-        if (isIOS) {
-          toast({
-            title: "Export Failed on iOS",
-            description:
-              "Try using a smaller image or different format. iOS Safari has limitations with large exports.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Export Failed",
-            description: "Please try again",
-            variant: "destructive",
-          });
-        }
-      }
-    },
-    [
-      uploadedImage,
-      format,
-      currentFormat,
-      toast,
-      user,
-      hasExportedOnce,
-      displayTagline,
-    ]
-  );
-
-  const handleCheckoutSuccess = async () => {
-    // Refresh credits first
-    if (user) {
-      const creditData = await getUserCredits(user.uid);
-      setUserCredits(creditData.credits);
-      setHasSubscription(creditData.subscriptionActive);
-    }
-
-    if (checkoutProduct === "image-3pack") {
-      exportToJPG(true); // Skip credit check since they just purchased
-      toast({
-        title: "Download Started",
-        description:
-          "Your Porsche ad is downloading now. You have credits for 2 more exports.",
-      });
-    } else if (checkoutProduct === "monthly-subscription") {
-      toast({
-        title: "Subscription Active",
-        description:
-          "You now have unlimited exports. Your image is downloading.",
-      });
-      exportToJPG(true); // Skip credit check since they just subscribed
-    }
-  };
-
-  const handleFreeExport = () => {
+    // PREVIEW MODE: Require authentication but allow unlimited exports
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    exportToJPG(true); // Skip credit check for free export
+
+    // CREDITS SYSTEM DISABLED FOR PREVIEW MODE
+    // if (!skipCreditCheck && user) {
+    //   const accessResult = await verifyExportAccess(user.uid);
+    //   if (!accessResult.allowed) {
+    //     toast({
+    //       title: "Export Not Allowed",
+    //       description:
+    //         accessResult.reason ||
+    //         "You need to purchase credits or a subscription",
+    //       variant: "destructive",
+    //     });
+    //     return;
+    //   }
+    // }
+
+    // Detect iOS Safari (which has html-to-image issues with images)
+    const isIOS =
+      typeof navigator !== "undefined" &&
+      /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    try {
+      setIsGenerating(true);
+
+      const displayWidth = canvasRef.current.offsetWidth;
+      const displayHeight = canvasRef.current.offsetHeight;
+      const targetWidth = currentFormat.width;
+      const targetHeight = currentFormat.height;
+
+      // Calculate pixel ratio with iOS safety caps
+      let pixelRatio = Math.max(
+        targetWidth / displayWidth,
+        targetHeight / displayHeight
+      );
+
+      // iOS Safari has issues with large pixel ratios and data URL images
+      if (isIOS) {
+        pixelRatio = Math.min(pixelRatio, 1.5); // Cap at 1.5x for iOS stability
+      }
+
+      console.log("[v0] Export settings:", {
+        displaySize: `${displayWidth}x${displayHeight}`,
+        targetSize: `${targetWidth}x${targetHeight}`,
+        pixelRatio: pixelRatio.toFixed(2),
+        format,
+        isIOS,
+      });
+
+      // iOS Safari workaround: do a warm-up render first
+      const doRender = () =>
+        htmlToImage.toJpeg(canvasRef.current!, {
+          quality: 0.98,
+          pixelRatio: pixelRatio,
+          cacheBust: true,
+          backgroundColor: "#ffffff",
+          skipFonts: true,
+          // Additional iOS-specific options
+          ...(isIOS && {
+            width: displayWidth,
+            height: displayHeight,
+            style: {
+              transform: "scale(1)",
+              transformOrigin: "top left",
+            },
+          }),
+        });
+
+      let dataUrl: string;
+
+      if (isIOS) {
+        // Warm-up render for iOS Safari stability
+        try {
+          await doRender();
+          console.log("[v0] iOS warm-up render completed");
+        } catch (warmupError) {
+          console.log("[v0] iOS warm-up render failed, continuing anyway");
+        }
+      }
+
+      // Main render
+      dataUrl = await doRender();
+      console.log("[v0] Export complete, image generated");
+
+      // Upload to Cloudflare FIRST (required before download)
+      if (user) {
+        try {
+          const idToken = await user.getIdToken();
+
+          const uploadResponse = await fetch("/api/upload-ad", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({
+              imageData: dataUrl,
+              format,
+              tagline: displayTagline,
+            }),
+          });
+
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(errorData.error || "Upload failed");
+          }
+
+          const { url } = await uploadResponse.json();
+          console.log("[v0] Image uploaded to Cloudflare:", url);
+        } catch (uploadError: any) {
+          console.error("[v0] Upload error:", uploadError);
+          setIsGenerating(false);
+
+          // Show more specific error message
+          const errorMessage =
+            uploadError.message ||
+            "Failed to save to your account. Please try again.";
+          toast({
+            title: "Upload Failed",
+            description: errorMessage,
+            variant: "destructive",
+          });
+          return; // Don't allow download if upload fails
+        }
+      }
+
+      // Download the image AFTER successful upload
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
+      a.click();
+
+      setIsGenerating(false);
+      toast({
+        title: "Success!",
+        description: `High-resolution ${targetWidth}x${targetHeight} image downloaded`,
+      });
+    } catch (error) {
+      setIsGenerating(false);
+      console.error("[v0] Export failed:", error);
+
+      // More specific error messages for iOS
+      if (isIOS) {
+        toast({
+          title: "Export Failed on iOS",
+          description:
+            "Try using a smaller image or different format. iOS Safari has limitations with large exports.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Export Failed",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [uploadedImage, format, currentFormat, toast, user, displayTagline]);
+
+  // CHECKOUT DISABLED FOR PREVIEW MODE
+  // const handleCheckoutSuccess = async () => {
+  //   if (user) {
+  //     const creditData = await getUserCredits(user.uid);
+  //     setUserCredits(creditData.credits);
+  //     setHasSubscription(creditData.subscriptionActive);
+  //   }
+  //   if (checkoutProduct === "image-3pack") {
+  //     exportToJPG();
+  //     toast({
+  //       title: "Download Started",
+  //       description: "Your Porsche ad is downloading now.",
+  //     });
+  //   } else if (checkoutProduct === "monthly-subscription") {
+  //     toast({
+  //       title: "Subscription Active",
+  //       description: "You now have unlimited exports.",
+  //     });
+  //     exportToJPG();
+  //   }
+  // };
+
+  const handleExport = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    exportToJPG();
   };
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
     // After successful auth, trigger the export
-    exportToJPG(true);
-  };
-
-  const handleExportClick = (productId: string, e: React.MouseEvent) => {
-    if (e.shiftKey) {
-      console.log("[v0] Dev mode: Bypassing payment for testing");
-      if (productId === "image-3pack" || productId === "monthly-subscription") {
-        exportToJPG(true); // Skip credit check in dev mode
-        toast({
-          title: "Dev Mode: Download Started",
-          description: "Testing export without payment",
-        });
-      }
-      return;
-    }
-
-    setCheckoutProduct(productId);
+    exportToJPG();
   };
 
   return (
@@ -812,86 +799,103 @@ export default function PorscheAdBuilder() {
             </Card>
 
             <Card className="p-6">
-              <h2 className="mb-0 font-semibold text-lg">Export Your Ad</h2>
-              {!hasExportedOnce && !user && (
-                <p className="text-sm font-medium text-[#444] dark:text-blue-200">
-                  Create an Account to Download Your Image for Free!
+              <h2 className="mb-2 font-semibold text-lg">Export Your Ad</h2>
+              {!user && (
+                <p className="text-sm mb-4 text-muted-foreground">
+                  Create an account to save and download your ads
                 </p>
               )}
-              {user && (hasSubscription || userCredits > 0) && (
-                <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                    {hasSubscription ? (
-                      <>🎉 Unlimited Exports Active</>
-                    ) : (
-                      <>Credits remaining: {userCredits}</>
-                    )}
-                  </p>
-                </div>
+              {user && (
+                <p className="text-sm mb-4 text-green-600 dark:text-green-400">
+                  ✓ Signed in • Unlimited exports
+                </p>
               )}
 
-              <div className="space-y-3">
-                {!hasExportedOnce && (
+              <Button
+                onClick={handleExport}
+                disabled={!uploadedImage}
+                className="w-full"
+                size="lg"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {user ? "Save & Download Image" : "Sign In to Download"}
+              </Button>
+
+              {/* PAYMENT OPTIONS HIDDEN FOR PREVIEW MODE */}
+              {/* {user && (
+                <div className="mt-4 pt-4 border-t space-y-3">
+                  <p className="text-xs text-muted-foreground text-center">
+                    Need more exports?
+                  </p>
                   <Button
-                    onClick={handleFreeExport}
+                    onClick={(e) => handleExportClick("image-3pack", e)}
                     disabled={!uploadedImage}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
                   >
                     <Download className="mr-2 h-4 w-4" />
-                    {user ? "Download Your Image" : "Download Your Image"}
+                    3-Pack - ${(PRODUCTS[0].priceInCents / 100).toFixed(2)}
                   </Button>
-                )}
-
-                {hasExportedOnce && (
-                  <>
-                    <Button
-                      onClick={(e) => handleExportClick("image-3pack", e)}
-                      disabled={!uploadedImage}
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      This Image + 2 More - $
-                      {(PRODUCTS[0].priceInCents / 100).toFixed(2)}
-                    </Button>
-                    <Button
-                      onClick={(e) =>
-                        handleExportClick("monthly-subscription", e)
-                      }
-                      disabled={!uploadedImage}
-                      variant="secondary"
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Car className="mr-2 h-4 w-4" />
-                      Unlimited Exports - $
-                      {(PRODUCTS[1].priceInCents / 100).toFixed(2)}{" "}
-                      <span className="text-gray-500 text-[10px]">/mo</span>
-                    </Button>
-                  </>
-                )}
-              </div>
+                  <Button
+                    onClick={(e) =>
+                      handleExportClick("monthly-subscription", e)
+                    }
+                    disabled={!uploadedImage}
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Car className="mr-2 h-4 w-4" />
+                    Unlimited - ${(PRODUCTS[1].priceInCents / 100).toFixed(2)}
+                    /mo
+                  </Button>
+                </div>
+              )} */}
             </Card>
           </div>
         </div>
       </div>
 
-      {checkoutProduct && (
+      {/* CHECKOUT MODAL HIDDEN FOR PREVIEW MODE */}
+      {/* {checkoutProduct && (
         <CheckoutModal
           isOpen={!!checkoutProduct}
           onClose={() => setCheckoutProduct(null)}
           productId={checkoutProduct}
           onSuccess={handleCheckoutSuccess}
         />
+      )} */}
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
+          mode="signup"
+        />
       )}
 
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={handleAuthSuccess}
-        mode="signup"
-      />
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-8 shadow-2xl max-w-sm w-full mx-4">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+                <div className="w-16 h-16 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-1">
+                  Generating Image...
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Please wait while we create your ad
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

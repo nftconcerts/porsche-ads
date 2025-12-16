@@ -1,10 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, User, Images } from "lucide-react";
+import { LogIn, User, Images } from "lucide-react";
 import Link from "next/link";
 
 export default function Header() {
@@ -14,14 +12,6 @@ export default function Header() {
   useEffect(() => {
     setPath(window.location.pathname);
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
 
   return (
     <header className="border-b border-gray-800 bg-[#0E0E12]">
@@ -66,21 +56,29 @@ export default function Header() {
             {loading ? (
               <div className="h-8 w-16 animate-pulse rounded bg-gray-800" />
             ) : user ? (
-              <div className="flex items-center gap-2">
-                <div className="hidden md:flex items-center gap-2 text-sm text-gray-300">
-                  <User className="h-4 w-4" />
-                  <span className="max-w-[150px] truncate">{user.email}</span>
-                </div>
-                <Button
-                  onClick={handleLogout}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
-                >
-                  <LogOut className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Logout</span>
-                </Button>
-              </div>
+              path === "/my-account" ? (
+                <Link href="/">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                  >
+                    <Images className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Create an Ad</span>
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/my-account">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                  >
+                    <User className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">My Account</span>
+                  </Button>
+                </Link>
+              )
             ) : (
               <Link href="/login">
                 <Button

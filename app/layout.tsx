@@ -6,6 +6,7 @@ import "./globals.css";
 import Footer from "@/components/footer";
 import ClientProvider from "@/components/ClientProvider";
 import Lockscreen from "@/components/lockscreen";
+import { Toaster } from "@/components/ui/toaster";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -38,6 +39,7 @@ export default function RootLayout({
         <ClientProvider>{children}</ClientProvider>
         <Analytics />
         <Footer />
+        <Toaster />
       </body>
     </html>
   );
