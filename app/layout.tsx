@@ -54,12 +54,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={workSans.variable}>
-      <body className={`font-arial antialiased`}>
+      <body
+        className={`font-arial antialiased flex flex-col min-h-screen bg-[#0E0E12] text-white justify-end`}
+      >
         {/* <Lockscreen /> */}
         <ClientProvider>{children}</ClientProvider>
         <Analytics />
         <Footer />
         <Toaster />
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 -z-10 flex items-center justify-center pointer-events-none select-none"
+        >
+          <h1 className="text-[12vw] sm:text-[10vw] md:text-[8vw] font-bold text-white/20 tracking-tighter">
+            p-ads.com
+          </h1>
+        </div>
       </body>
     </html>
   );
