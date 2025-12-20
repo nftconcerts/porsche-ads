@@ -34,7 +34,7 @@
 ## 🎯 Payment-First Flow (As Requested!)
 
 ```
-1. User customizes Porsche ad
+1. User customizes p-ad
          ↓
 2. Clicks "Digital Download" or "Print & Ship"
          ↓
@@ -122,7 +122,7 @@
 
 1. **Create an ad**
 
-   - Upload a Porsche image
+   - Upload a p-car image
    - Customize text and format
 
 2. **Test Checkout (Dev Mode)**
@@ -156,7 +156,7 @@ console.log(token.claims);
 
 ## 🔑 Key Differences from JimmyGPT
 
-| Feature          | JimmyGPT                              | Porsche Ads                         |
+| Feature          | JimmyGPT                              | p-ads                               |
 | ---------------- | ------------------------------------- | ----------------------------------- |
 | Account Creation | Manual sign-up                        | **Automatic after payment**         |
 | Payment Flow     | After login                           | **Before account exists**           |

@@ -13,9 +13,9 @@ export default function PrivacyPage() {
           </h3>{" "}
           <p className="mb-4">
             This Privacy Policy applies to the website:{" "}
-            <span className="underline">porsche-ads.vercel.app</span> (the
-            &quot;Site&quot;) and does not govern privacy practices associated
-            with offline activities. These are the guidelines used by Sheep LLC.
+            <span className="underline">p-ads.com</span> (the &quot;Site&quot;)
+            and does not govern privacy practices associated with offline
+            activities. These are the guidelines used by Sheep LLC.
             (&quot;COMPANY&quot;) (currently doing business as
             &quot;p-ads.com&quot;) in protecting your privacy. The Site is only
             directed to those in the United States; however it may be accessed

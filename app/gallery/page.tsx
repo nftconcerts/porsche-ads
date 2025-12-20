@@ -12,7 +12,7 @@ const GALLERY_IMAGES = [
   {
     id: 1,
     src: "https://imagedelivery.net/rVtfhuW6Th7mqwAJAWfhBA/b75b2c71-28c3-4585-dbfd-a8c1dcc56b00/large",
-    alt: "Porsche 911 Classic Ad",
+    alt: "911 Classic Ad",
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ const GALLERY_IMAGES = [
   {
     id: 3,
     src: "https://imagedelivery.net/rVtfhuW6Th7mqwAJAWfhBA/9580d48a-f284-4d82-e726-4b076ce0fb00/large",
-    alt: "Porsche GT3 Ad",
+    alt: "GT3 Ad",
   },
   {
     id: 4,
@@ -75,7 +75,7 @@ export default function GalleryPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Gallery</h1>
-          <p className="text-gray-400">Example Porsche created on p-ads.com</p>
+          <p className="text-gray-400">Example Ads created on p-ads.com</p>
         </div>
 
         {/* Masonry Grid */}

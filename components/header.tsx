@@ -48,7 +48,7 @@ export default function Header() {
           <div className="flex-1 text-center">
             <Link href="/">
               <h1 className="text-base sm:text-xl font-bold text-white">
-                Porsche Ad Builder
+                P-Ad Builder
               </h1>
             </Link>
           </div>

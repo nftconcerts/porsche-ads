@@ -1,4 +1,4 @@
-export const PORSCHE_TAGLINES = [
+export const P_TAGLINES = [
   "There Is No Substitute",
   "Kills Bugs Fast",
   "The best connection between two points is a curve",
@@ -9,4 +9,4 @@ export const PORSCHE_TAGLINES = [
   "If you could own any car in the world, what color would you choose?",
 ] as const;
 
-export type PorscheTagline = (typeof PORSCHE_TAGLINES)[number];
+export type PTagline = (typeof P_TAGLINES)[number];

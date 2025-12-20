@@ -69,7 +69,7 @@ export default function Lockscreen() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold text-white tracking-tight">
-              Porsche Ad Builder
+              P-Ad Builder
             </h1>
             <p className="text-gray-300 text-sm">Enter password to continue</p>
           </div>

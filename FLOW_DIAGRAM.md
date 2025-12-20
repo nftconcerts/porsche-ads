@@ -2,11 +2,11 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     PORSCHE AD BUILDER FLOW                          │
+│                     P-AD BUILDER FLOW                               │
 └─────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐
-│   1. USER    │  Uploads Porsche photo, customizes ad
+│   1. USER    │  Uploads p-car photo, customizes ad
 │   CREATES    │  Selects format, adjusts text
 │     AD       │
 └──────┬───────┘
@@ -126,7 +126,7 @@
 │  Subject: "Welcome - Set Your Password"                 │
 │  Content:                                                │
 │    "Click here to set your password and                 │
-│     access your Porsche ad: [LINK]"                     │
+│     access your p-ad: [LINK]"                     │
 └──────┬───────────────────────────────────────────────────┘
        │
        ▼
@@ -166,7 +166,7 @@
 ════════════════════════════════════════════════════════════
 
 Frontend (Client):
-├── components/porsche-ad-builder.tsx  → Main UI
+├── components/p-ad-builder.tsx  → Main UI
 ├── components/checkout-modal.tsx      → Stripe checkout
 ├── components/ClientProvider.tsx      → Auth state
 ├── components/auth-modal.tsx          → Login UI
@@ -210,7 +210,7 @@ JimmyGPT:
 4. Stripe extension sets role in Firestore
 5. Cloud function reads Firestore → sets custom claims
 
-Porsche Ads (This Project):
+P-Ads (This Project):
 1. User purchases (no account yet)
 2. Webhook creates account automatically
 3. Webhook sets custom claims directly

@@ -16,7 +16,7 @@ import {
   Maximize2,
   Car,
 } from "lucide-react";
-import { PORSCHE_TAGLINES } from "@/lib/porsche-taglines";
+import { P_TAGLINES } from "@/lib/p-taglines";
 import { PRODUCTS } from "@/lib/products";
 import PaymentModal from "./payment-modal";
 import AuthModal from "./auth-modal";
@@ -60,7 +60,7 @@ const FORMATS = {
   },
 };
 
-export default function PorscheAdBuilder() {
+export default function PAdBuilder() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -79,9 +79,7 @@ export default function PorscheAdBuilder() {
   const [lastTextPinchDistance, setLastTextPinchDistance] = useState<
     number | null
   >(null);
-  const [selectedTagline, setSelectedTagline] = useState<string>(
-    PORSCHE_TAGLINES[0]
-  );
+  const [selectedTagline, setSelectedTagline] = useState<string>(P_TAGLINES[0]);
   const [customTagline, setCustomTagline] = useState("");
   const [useCustomTagline, setUseCustomTagline] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<string | null>(null);
@@ -832,7 +830,7 @@ export default function PorscheAdBuilder() {
                   onValueChange={setSelectedTagline}
                 >
                   <div className="space-y-3">
-                    {PORSCHE_TAGLINES.map((tagline) => (
+                    {P_TAGLINES.map((tagline) => (
                       <div
                         key={tagline}
                         className="flex items-start space-x-2 text-xl"

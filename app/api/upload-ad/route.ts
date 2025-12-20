@@ -6,7 +6,7 @@ import {
 } from "@/lib/cloudflare";
 
 /**
- * Upload a generated Porsche ad image to Cloudflare and save to Firestore
+ * Upload a generated p-ad image to Cloudflare and save to Firestore
  */
 export async function POST(req: NextRequest) {
   try {
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate filename
-    const filename = `porsche-ad-${format}-${Date.now()}.jpg`;
+    const filename = `p-ad-${tagline}-${Date.now()}.jpg`;
 
     // Upload to Cloudflare
     const cloudflareResponse = await uploadToCloudflareImages(
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save to Firestore
-    const docRef = await adminDb.collection("porsche-ads").add({
+    const docRef = await adminDb.collection("p-ads").add({
       url: publicUrl,
       userId,
       userEmail,

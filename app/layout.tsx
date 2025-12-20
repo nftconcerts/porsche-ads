@@ -13,14 +13,14 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 const workSans = Work_Sans({
   weight: ["700", "800", "900"],
   subsets: ["latin"],
-  variable: "--font-porsche",
+  variable: "--font-p-ads",
   display: "swap",
   preload: true,
 });
 
 export const metadata: Metadata = {
   title: "p-ads.com",
-  description: "Create your own classic Porsche advertisement",
+  description: "Create your own classic p-car advertisment.",
   icons: {
     icon: [
       { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },

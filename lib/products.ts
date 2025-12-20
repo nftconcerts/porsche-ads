@@ -14,7 +14,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "single-download",
     name: "Single Download",
-    description: "Download 1 custom Porsche ad as high-resolution image",
+    description: "Download 1 custom P-ad as high-resolution image",
     priceInCents: 1000, // $10.00
     stripePriceId: "price_1SgH90IN1N57cIQQhvVkDIvX",
     type: "one_time",

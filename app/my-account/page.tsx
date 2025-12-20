@@ -134,7 +134,7 @@ export default function MyAccountPage() {
   const handleDownload = (url: string, format: string, timestamp: number) => {
     const a = document.createElement("a");
     a.href = url;
-    a.download = `porsche-ad-${format}-${timestamp}.jpg`;
+    a.download = `p-ad-${format}-${timestamp}.jpg`;
     a.target = "_blank";
     a.click();
 
@@ -184,8 +184,8 @@ export default function MyAccountPage() {
                   Subscription Activated!
                 </h3>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  You now have unlimited downloads. Create as many Porsche ads
-                  as you want!
+                  You now have unlimited downloads. Create as many p-ads as you
+                  want!
                 </p>
               </div>
             </div>
@@ -212,7 +212,7 @@ export default function MyAccountPage() {
 
         <Card className="p-6 mb-8 bg-white dark:bg-gray-900">
           <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
-            Your Porsche Ads
+            Your P-Ads
           </h2>
 
           {loading ? (
@@ -238,13 +238,13 @@ export default function MyAccountPage() {
                   <div className="aspect-square relative bg-gray-100 dark:bg-gray-900">
                     <img
                       src={image.url}
-                      alt={image.tagline || "Porsche Ad"}
+                      alt={image.tagline || "p-ad"}
                       className="w-full h-full object-contain"
                     />
                   </div>
                   <div className="p-4 space-y-3">
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 min-h-[40px]">
-                      {image.tagline || "Custom Porsche Ad"}
+                      {image.tagline || "Custom p-ad"}
                     </p>
                     <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                       <span className="uppercase font-semibold">

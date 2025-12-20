@@ -1,10 +1,10 @@
-# Porsche Ad Builder
+# P-Ad Builder
 
-Create your own classic Porsche advertisement with custom images and taglines. Built with Next.js, Stripe, and Firebase.
+Create your own classic P advertisement with custom images and taglines. Built with Next.js, Stripe, and Firebase.
 
 ## Features
 
-- 🎨 **Custom Ad Builder** - Upload your Porsche image and customize text
+- 🎨 **Custom Ad Builder** - Upload your p-car image and customize text
 - 📱 **Multiple Formats** - Mobile Story (9:16), Square Post (1:1), Classic Poster (3:2)
 - 💳 **Stripe Payments** - Secure checkout for digital downloads and prints
 - 🔐 **Firebase Auth** - Automatic account creation after purchase
@@ -70,7 +70,7 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 │   └── page.tsx         # Main ad builder page
 ├── components/
 │   ├── ui/              # Reusable UI components
-│   ├── porsche-ad-builder.tsx
+│   ├── p-ad-builder.tsx
 │   ├── checkout-modal.tsx
 │   ├── auth-modal.tsx
 │   └── ClientProvider.tsx
@@ -83,12 +83,12 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 │   ├── stripe.ts        # Stripe config
 │   └── products.ts      # Product definitions
 └── public/
-    └── images/          # Porsche ad frames
+    └── images/          # P ad frames
 ```
 
 ## Payment Flow
 
-1. User creates their custom Porsche ad
+1. User creates their custom p-ad
 2. Clicks "Digital Download" or "Premium Print & Ship"
 3. Stripe checkout modal opens (collects email + payment)
 4. On successful payment:

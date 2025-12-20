@@ -1,4 +1,4 @@
-# Porsche Ad Builder - Environment Variables Setup
+# P-Ad Builder - Environment Variables Setup
 
 ## Required Environment Variables
 

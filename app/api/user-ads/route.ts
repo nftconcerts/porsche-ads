@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     let adsSnapshot;
     try {
       adsSnapshot = await adminDb
-        .collection("porsche-ads")
+        .collection("p-ads")
         .where("userId", "==", userId)
         .orderBy("timestamp", "desc")
         .get();
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       );
       // If composite index doesn't exist, fetch without ordering
       adsSnapshot = await adminDb
-        .collection("porsche-ads")
+        .collection("p-ads")
         .where("userId", "==", userId)
         .get();
     }

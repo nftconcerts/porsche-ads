@@ -1,12 +1,12 @@
-# Porsche Ad Builder - Integration Summary
+# P-Ad Builder - Integration Summary
 
 ## 🎉 What's Been Integrated
 
-Your Porsche Ad Builder now has a complete **Stripe + Firebase authentication** system modeled after your JimmyGPT implementation, with these key improvements:
+Your P-Ad Builder now has a complete **Stripe + Firebase authentication** system modeled after your JimmyGPT implementation, with these key improvements:
 
 ### Payment-First Flow
 
-1. **User creates ad** → customizes their Porsche advertisement
+1. **User creates ad** → customizes their p-ad
 2. **Clicks export/print** → Stripe checkout modal opens
 3. **Enters email & pays** → Stripe processes payment
 4. **Webhook fires** → Automatic account creation happens
@@ -143,9 +143,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Replace the TODO section with:
 await resend.emails.send({
-  from: "Porsche Ads <noreply@yourdomain.com>",
+  from: "p-ads <noreply@yourdomain.com>",
   to: customerEmail,
-  subject: "Welcome to Porsche Ad Builder - Set Your Password",
+  subject: "Welcome P-Ad Builder - Set Your Password",
   html: `
     <h1>Welcome!</h1>
     <p>Your purchase was successful. Click the link below to set your password:</p>
