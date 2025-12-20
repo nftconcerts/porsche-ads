@@ -685,14 +685,10 @@ export default function PorscheAdBuilder() {
                     draggable={false}
                   />
 
-                  <Image
+                  <img
                     src={currentFormat.frame || "/placeholder.svg"}
                     alt="Porsche Frame"
-                    fill
-                    priority
-                    className="pointer-events-none object-cover z-20"
-                    sizes="(max-width: 768px) 100vw, 800px"
-                    quality={100}
+                    className="absolute inset-0 w-full h-full pointer-events-none object-cover z-20"
                   />
 
                   <div className="absolute inset-0 z-30">

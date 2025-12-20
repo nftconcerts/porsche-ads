@@ -11,7 +11,7 @@ export async function initializeNewUser(userId: string, email: string) {
     if (!userDoc.exists) {
       await userRef.set({
         email: email,
-        credits: 1, // Give 1 free credit
+        credits: 5, // Give 5 free credits
         subscriptionActive: false,
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
@@ -23,8 +23,8 @@ export async function initializeNewUser(userId: string, email: string) {
         hasCredits: true,
       });
 
-      console.log(`New user ${email} initialized with 1 free credit`);
-      return { success: true, credits: 1 };
+      console.log(`New user ${email} initialized with 5 free credits`);
+      return { success: true, credits: 5 };
     }
 
     // User exists, just return their current credits

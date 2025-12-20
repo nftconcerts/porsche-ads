@@ -21,8 +21,6 @@ const workSans = Work_Sans({
 export const metadata: Metadata = {
   title: "p-ads.com",
   description: "Create your own classic Porsche advertisement",
-  themeColor: "#0E0E12",
-  viewport: "width=device-width, initial-scale=1",
   icons: {
     icon: [
       { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -45,6 +43,13 @@ export const metadata: Metadata = {
   other: {
     "apple-mobile-web-app-status-bar-style": "black-translucent",
   },
+};
+
+export const themeColor = "#0E0E12";
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
