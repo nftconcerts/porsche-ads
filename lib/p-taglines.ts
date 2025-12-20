@@ -2,7 +2,6 @@ export const P_TAGLINES = [
   "There Is No Substitute",
   "Kills Bugs Fast",
   "The best connection between two points is a curve",
-  "The German word for 'fast' has always been 'Porsche'",
   "Engineered for Magic. Everyday",
   "Soul, Electrified.",
   "Driven by Dreams",

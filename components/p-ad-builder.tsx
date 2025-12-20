@@ -492,7 +492,7 @@ export default function PAdBuilder() {
       // Download the image AFTER successful upload
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
+      a.download = `p-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
       a.click();
 
       // Log for debugging: if we get here, download succeeded
@@ -542,7 +542,7 @@ export default function PAdBuilder() {
       exportToJPG();
       toast({
         title: "Download Started",
-        description: "Your Porsche ad is downloading now.",
+        description: "Your p-ad is downloading now.",
       });
     } else if (checkoutProduct === "monthly-subscription") {
       toast({
@@ -594,15 +594,6 @@ export default function PAdBuilder() {
   return (
     <div className="min-h-screen p-6 bg-[#0E0E12]">
       <div className="mx-auto max-w-7xl">
-        {/* <header className="mb-8 text-center">
-          <h1 className="mb-2 font-arial text-4xl font-bold tracking-tight text-white">
-            Porsche Ad Builder
-          </h1>
-          <p className="text-gray-300">
-            Create your own classic Porsche advertisement
-          </p>
-        </header> */}
-
         <div className="grid gap-8 lg:grid-cols-[1fr,400px]">
           <div className="space-y-3">
             {/* <Card className="p-4"> */}
@@ -651,7 +642,7 @@ export default function PAdBuilder() {
                   >
                     <img
                       src={currentFormat.frame || "/placeholder.svg"}
-                      alt="Porsche Frame"
+                      alt="P-Frame"
                       className="absolute inset-0 w-full h-full pointer-events-none object-cover opacity-20"
                     />
 
@@ -659,7 +650,7 @@ export default function PAdBuilder() {
                       <Upload className="h-16 w-16 text-white/50" />
                       <div className="text-center">
                         <p className="text-xl font-semibold mb-2 text-white">
-                          Drop your Porsche here
+                          Drop your P-Car here
                         </p>
                         <p className="text-gray-300">
                           or click to browse files
@@ -694,7 +685,7 @@ export default function PAdBuilder() {
 
                   <img
                     src={currentFormat.frame || "/placeholder.svg"}
-                    alt="Porsche Frame"
+                    alt="P-Frame"
                     className="absolute inset-0 w-full h-full pointer-events-none object-cover z-20"
                   />
                   <div className="absolute inset-0 z-30">
@@ -714,7 +705,7 @@ export default function PAdBuilder() {
                       onTouchStart={handleTextTouchStart}
                     >
                       <p
-                        className="font-porsche font-bold leading-tight text-foreground text-balance"
+                        className="font-p-ads font-bold leading-tight text-foreground text-balance"
                         style={{
                           fontSize:
                             windowWidth < 768
@@ -815,7 +806,7 @@ export default function PAdBuilder() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="preset" id="preset" />
-                    <Label htmlFor="preset">Classic Porsche Lines</Label>
+                    <Label htmlFor="preset">Classic Lines</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="custom" id="custom" />
@@ -854,7 +845,7 @@ export default function PAdBuilder() {
                 <Input
                   value={customTagline}
                   onChange={(e) => setCustomTagline(e.target.value)}
-                  placeholder="What makes your Porsche special?"
+                  placeholder="Enter your custom tagline"
                   className="w-full"
                 />
               )}
