@@ -591,6 +591,13 @@ export default function PAdBuilder() {
     }, 500);
   };
 
+  // When switching to preset, clear the custom tagline
+  const handlePresetTaglineChange = (tagline: string) => {
+    setSelectedTagline(tagline);
+    setCustomTagline("");
+    setUseCustomTagline(false);
+  };
+
   return (
     <div className="min-h-screen p-6 bg-[#0E0E12]">
       <div className="mx-auto max-w-7xl">
@@ -795,60 +802,44 @@ export default function PAdBuilder() {
 
           <div className="space-y-6">
             <Card className="p-6">
-              <h2 className="mb-4 font-semibold text-lg">Choose Tagline</h2>
+              <h2 className=" font-semibold text-lg">Choose Tagline</h2>
 
-              <div className="mb-4">
-                <RadioGroup
-                  value={useCustomTagline ? "custom" : "preset"}
-                  onValueChange={(value) =>
-                    setUseCustomTagline(value === "custom")
-                  }
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="preset" id="preset" />
-                    <Label htmlFor="preset">Classic Lines</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="custom" id="custom" />
-                    <Label htmlFor="custom">Write Your Own</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              <Input
+                value={customTagline}
+                onChange={(e) => {
+                  setCustomTagline(e.target.value);
+                  setUseCustomTagline(true);
+                }}
+                placeholder="Enter your custom tagline"
+                className="w-full"
+              />
 
-              {!useCustomTagline ? (
-                <RadioGroup
-                  value={selectedTagline}
-                  onValueChange={setSelectedTagline}
-                >
-                  <div className="space-y-3">
-                    {P_TAGLINES.map((tagline) => (
-                      <div
-                        key={tagline}
-                        className="flex items-start space-x-2 text-xl"
+              <RadioGroup
+                value={selectedTagline}
+                onValueChange={handlePresetTaglineChange}
+                onClick={() => setUseCustomTagline(false)}
+              >
+                <div className="space-y-3">
+                  {P_TAGLINES.map((tagline) => (
+                    <div
+                      key={tagline}
+                      className="flex items-start space-x-2 text-xl"
+                    >
+                      <RadioGroupItem
+                        value={tagline}
+                        id={tagline}
+                        className="mt-1"
+                      />
+                      <Label
+                        htmlFor={tagline}
+                        className="cursor-pointer font-normal leading-relaxed"
                       >
-                        <RadioGroupItem
-                          value={tagline}
-                          id={tagline}
-                          className="mt-1"
-                        />
-                        <Label
-                          htmlFor={tagline}
-                          className="cursor-pointer font-normal leading-relaxed"
-                        >
-                          {tagline}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </RadioGroup>
-              ) : (
-                <Input
-                  value={customTagline}
-                  onChange={(e) => setCustomTagline(e.target.value)}
-                  placeholder="Enter your custom tagline"
-                  className="w-full"
-                />
-              )}
+                        {tagline}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
             </Card>
 
             <Card className="p-6">
