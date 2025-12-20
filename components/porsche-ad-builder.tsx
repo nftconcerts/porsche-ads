@@ -661,8 +661,8 @@ export default function PorscheAdBuilder() {
                         transformOrigin: "bottom left",
                         bottom: 0,
                         left: 0,
-                        paddingLeft: "112px",
-                        paddingBottom: "176px",
+                        paddingLeft: windowWidth < 768 ? "24px" : "112px",
+                        paddingBottom: windowWidth < 768 ? "80px" : "176px",
                         paddingTop: "32px",
                         paddingRight: "32px",
                       }}
@@ -672,8 +672,11 @@ export default function PorscheAdBuilder() {
                       <p
                         className="font-porsche font-bold leading-tight text-foreground text-balance"
                         style={{
-                          fontSize: `${fontSize}rem`,
-                          maxWidth: "512px",
+                          fontSize:
+                            windowWidth < 768
+                              ? `${fontSize * 0.6}rem`
+                              : `${fontSize}rem`,
+                          maxWidth: windowWidth < 768 ? "280px" : "512px",
                           transform: "scaleX(0.85)",
                           transformOrigin: "left center",
                         }}
