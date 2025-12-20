@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { FileUploader } from "react-drag-drop-files";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -95,6 +96,14 @@ export default function PorscheAdBuilder() {
   const displayTagline = useCustomTagline ? customTagline : selectedTagline;
 
   const currentFormat = FORMATS[format]; // Get current format config
+
+  // Preload frame images for faster rendering
+  useEffect(() => {
+    Object.values(FORMATS).forEach((format) => {
+      const img = new window.Image();
+      img.src = format.frame;
+    });
+  }, []);
 
   // Fetch user credits when user is authenticated
   useEffect(() => {
@@ -666,10 +675,14 @@ export default function PorscheAdBuilder() {
                     draggable={false}
                   />
 
-                  <img
+                  <Image
                     src={currentFormat.frame || "/placeholder.svg"}
                     alt="Porsche Frame"
-                    className="absolute inset-0 w-full h-full pointer-events-none object-cover z-20"
+                    fill
+                    priority
+                    className="pointer-events-none object-cover z-20"
+                    sizes="(max-width: 768px) 100vw, 800px"
+                    quality={100}
                   />
 
                   <div className="absolute inset-0 z-30">

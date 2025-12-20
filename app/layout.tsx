@@ -14,6 +14,8 @@ const workSans = Work_Sans({
   weight: ["700", "800", "900"],
   subsets: ["latin"],
   variable: "--font-porsche",
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
