@@ -345,8 +345,16 @@ export default function PorscheAdBuilder() {
             "Purchase a download or subscribe for unlimited exports",
           variant: "destructive",
         });
+        // Refresh credits to sync UI with server state
+        const creditData = await getUserCredits(user.uid);
+        setUserCredits(creditData.credits);
+        setHasSubscription(creditData.subscriptionActive);
         return;
       }
+      // Credit was decremented, refresh UI immediately
+      const creditData = await getUserCredits(user.uid);
+      setUserCredits(creditData.credits);
+      setHasSubscription(creditData.subscriptionActive);
     }
 
     // Detect iOS Safari (which has html-to-image issues with images)
