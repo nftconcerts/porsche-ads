@@ -55,9 +55,16 @@ export default function AuthModal({
 
     try {
       if (isSignUp) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         // Initialize new user with 1 free credit
-        await initializeNewUser(userCredential.user.uid, userCredential.user.email!);
+        await initializeNewUser(
+          userCredential.user.uid,
+          userCredential.user.email!
+        );
         toast.success("Account created! You got 1 free download.");
         if (onSuccess) onSuccess();
         if (onClose) onClose();

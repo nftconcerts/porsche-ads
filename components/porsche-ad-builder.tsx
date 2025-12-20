@@ -533,10 +533,17 @@ export default function PorscheAdBuilder() {
     exportToJPG();
   };
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async () => {
     setShowAuthModal(false);
-    // After successful auth, trigger the export
-    exportToJPG();
+    // Wait a moment for auth state to propagate, then refresh credits
+    setTimeout(async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const creditData = await getUserCredits(currentUser.uid);
+        setUserCredits(creditData.credits);
+        setHasSubscription(creditData.subscriptionActive);
+      }
+    }, 500);
   };
 
   return (
@@ -823,7 +830,8 @@ export default function PorscheAdBuilder() {
               {user && !hasSubscription && userCredits > 0 && (
                 <div className="text-sm mb-4">
                   <p className="text-muted-foreground">
-                    {userCredits} download{userCredits !== 1 ? 's' : ''} remaining
+                    {userCredits} download{userCredits !== 1 ? "s" : ""}{" "}
+                    remaining
                   </p>
                 </div>
               )}

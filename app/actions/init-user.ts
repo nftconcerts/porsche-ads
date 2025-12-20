@@ -29,10 +29,10 @@ export async function initializeNewUser(userId: string, email: string) {
 
     // User exists, just return their current credits
     const data = userDoc.data();
-    return { 
-      success: true, 
+    return {
+      success: true,
       credits: data?.credits || 0,
-      subscriptionActive: data?.subscriptionActive || false 
+      subscriptionActive: data?.subscriptionActive || false,
     };
   } catch (error: any) {
     console.error("Error initializing user:", error);
