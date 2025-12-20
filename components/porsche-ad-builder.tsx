@@ -464,6 +464,13 @@ export default function PorscheAdBuilder() {
       a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
       a.click();
 
+      // Refresh user credits after successful download
+      if (user) {
+        const creditData = await getUserCredits(user.uid);
+        setUserCredits(creditData.credits);
+        setHasSubscription(creditData.subscriptionActive);
+      }
+
       setIsGenerating(false);
       toast({
         title: "Success!",
