@@ -245,7 +245,7 @@ export default function AuthModal({
                   </div>
                   <Button
                     type="submit"
-                    className="w-full h-11"
+                    className="w-full !text-black"
                     disabled={loading}
                   >
                     {loading
@@ -342,7 +342,7 @@ export default function AuthModal({
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full !text-black" disabled={loading}>
                   {loading
                     ? "Please wait..."
                     : isSignUp

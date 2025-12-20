@@ -55,7 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={workSans.variable}>
       <body
-        className={`font-arial antialiased flex flex-col min-h-screen bg-[#0E0E12] text-white justify-end`}
+        className={`font-arial antialiased flex flex-col min-h-screen bg-[#0E0E12] justify-end`}
       >
         {/* <Lockscreen /> */}
         <ClientProvider>{children}</ClientProvider>
