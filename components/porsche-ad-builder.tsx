@@ -26,6 +26,7 @@ import { verifyExportAccess } from "@/app/actions/verify-export";
 import { getUserCredits } from "@/lib/user-credits";
 import * as htmlToImage from "html-to-image";
 import { auth } from "@/lib/firebase";
+import Link from "next/link";
 
 const FILE_TYPES = ["JPG", "JPEG", "PNG", "WEBP"];
 const MAX_FILE_SIZE = 5; // in MB (reduced to avoid Vercel export limits)
@@ -443,6 +444,11 @@ export default function PorscheAdBuilder() {
       dataUrl = await doRender();
       console.log("[v0] Export complete, image generated");
 
+      // Defensive: ensure dataUrl is valid before proceeding
+      if (!dataUrl) {
+        throw new Error("Image export failed: dataUrl is empty");
+      }
+
       // Upload to Cloudflare FIRST (required before download)
       if (user) {
         try {
@@ -490,6 +496,9 @@ export default function PorscheAdBuilder() {
       a.href = dataUrl;
       a.download = `porsche-ad-${format}-${targetWidth}x${targetHeight}.jpg`;
       a.click();
+
+      // Log for debugging: if we get here, download succeeded
+      console.log("[v0] Download triggered successfully on iOS/desktop");
 
       // Refresh user credits after successful download
       if (user) {
@@ -690,7 +699,6 @@ export default function PorscheAdBuilder() {
                     alt="Porsche Frame"
                     className="absolute inset-0 w-full h-full pointer-events-none object-cover z-20"
                   />
-
                   <div className="absolute inset-0 z-30">
                     <div
                       className="absolute pointer-events-auto cursor-move select-none touch-none"
@@ -888,15 +896,23 @@ export default function PorscheAdBuilder() {
                   Sign In for Free Download
                 </Button>
               ) : hasSubscription || userCredits > 0 ? (
-                <Button
-                  onClick={handleExport}
-                  disabled={!uploadedImage || isGenerating}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  size="lg"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  {isGenerating ? "Generating..." : "Download Image"}
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleExport}
+                    disabled={!uploadedImage || isGenerating}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    size="lg"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {isGenerating ? "Generating..." : "Download Image"}
+                  </Button>
+                  <Link
+                    href="/my-account"
+                    className="text-sm text-muted-foreground underline hover:text-white"
+                  >
+                    View Your Ads
+                  </Link>
+                </div>
               ) : (
                 <div className="space-y-3">
                   <Button
@@ -919,6 +935,12 @@ export default function PorscheAdBuilder() {
                     Single Download - $
                     {(PRODUCTS[0].priceInCents / 100).toFixed(2)}
                   </Button>
+                  <Link
+                    href="/my-account"
+                    className="text-sm text-muted-foreground underline hover:text-white"
+                  >
+                    View Your Ads
+                  </Link>
                 </div>
               )}
             </Card>
