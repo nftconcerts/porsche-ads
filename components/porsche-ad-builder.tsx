@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { PORSCHE_TAGLINES } from "@/lib/porsche-taglines";
 import { PRODUCTS } from "@/lib/products";
-import CheckoutModal from "./checkout-modal";
+import PaymentModal from "./payment-modal";
 import AuthModal from "./auth-modal";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -83,8 +83,8 @@ export default function PorscheAdBuilder() {
   const [customTagline, setCustomTagline] = useState("");
   const [useCustomTagline, setUseCustomTagline] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<string | null>(null);
-  // const [userCredits, setUserCredits] = useState<number>(0);
-  // const [hasSubscription, setHasSubscription] = useState<boolean>(false);
+  const [userCredits, setUserCredits] = useState<number>(0);
+  const [hasSubscription, setHasSubscription] = useState<boolean>(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
@@ -96,15 +96,15 @@ export default function PorscheAdBuilder() {
 
   const currentFormat = FORMATS[format]; // Get current format config
 
-  // Fetch user credits when user is authenticated (COMMENTED OUT FOR PREVIEW MODE)
-  // useEffect(() => {
-  //   if (user) {
-  //     getUserCredits(user.uid).then((data) => {
-  //       setUserCredits(data.credits);
-  //       setHasSubscription(data.subscriptionActive);
-  //     });
-  //   }
-  // }, [user]);
+  // Fetch user credits when user is authenticated
+  useEffect(() => {
+    if (user) {
+      getUserCredits(user.uid).then((data) => {
+        setUserCredits(data.credits);
+        setHasSubscription(data.subscriptionActive);
+      });
+    }
+  }, [user]);
 
   // Track window width for responsive text positioning
   React.useEffect(() => {
@@ -329,26 +329,25 @@ export default function PorscheAdBuilder() {
   const exportToJPG = useCallback(async () => {
     if (!canvasRef.current || !uploadedImage) return;
 
-    // PREVIEW MODE: Require authentication but allow unlimited exports
     if (!user) {
       setShowAuthModal(true);
       return;
     }
 
-    // CREDITS SYSTEM DISABLED FOR PREVIEW MODE
-    // if (!skipCreditCheck && user) {
-    //   const accessResult = await verifyExportAccess(user.uid);
-    //   if (!accessResult.allowed) {
-    //     toast({
-    //       title: "Export Not Allowed",
-    //       description:
-    //         accessResult.reason ||
-    //         "You need to purchase credits or a subscription",
-    //       variant: "destructive",
-    //     });
-    //     return;
-    //   }
-    // }
+    // Check credits/subscription before allowing export
+    if (user) {
+      const accessResult = await verifyExportAccess(user.uid);
+      if (!accessResult.allowed) {
+        toast({
+          title: "No Credits Available",
+          description:
+            accessResult.reason ||
+            "Purchase a download or subscribe for unlimited exports",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
     // Detect iOS Safari (which has html-to-image issues with images)
     const isIOS =
@@ -492,27 +491,26 @@ export default function PorscheAdBuilder() {
     }
   }, [uploadedImage, format, currentFormat, toast, user, displayTagline]);
 
-  // CHECKOUT DISABLED FOR PREVIEW MODE
-  // const handleCheckoutSuccess = async () => {
-  //   if (user) {
-  //     const creditData = await getUserCredits(user.uid);
-  //     setUserCredits(creditData.credits);
-  //     setHasSubscription(creditData.subscriptionActive);
-  //   }
-  //   if (checkoutProduct === "image-3pack") {
-  //     exportToJPG();
-  //     toast({
-  //       title: "Download Started",
-  //       description: "Your Porsche ad is downloading now.",
-  //     });
-  //   } else if (checkoutProduct === "monthly-subscription") {
-  //     toast({
-  //       title: "Subscription Active",
-  //       description: "You now have unlimited exports.",
-  //     });
-  //     exportToJPG();
-  //   }
-  // };
+  const handleCheckoutSuccess = async () => {
+    if (user) {
+      const creditData = await getUserCredits(user.uid);
+      setUserCredits(creditData.credits);
+      setHasSubscription(creditData.subscriptionActive);
+    }
+    if (checkoutProduct === "single-download") {
+      exportToJPG();
+      toast({
+        title: "Download Started",
+        description: "Your Porsche ad is downloading now.",
+      });
+    } else if (checkoutProduct === "monthly-subscription") {
+      toast({
+        title: "Subscription Active",
+        description: "You now have unlimited exports.",
+      });
+      exportToJPG();
+    }
+  };
 
   const handleExport = () => {
     console.log("[v0] handleExport called, user:", user);
@@ -521,6 +519,17 @@ export default function PorscheAdBuilder() {
       setShowAuthModal(true);
       return;
     }
+
+    // Check if user has credits or subscription
+    if (!hasSubscription && userCredits <= 0) {
+      toast({
+        title: "No Credits Available",
+        description: "Purchase a download or subscribe for unlimited exports",
+        variant: "destructive",
+      });
+      return;
+    }
+
     exportToJPG();
   };
 
@@ -658,6 +667,8 @@ export default function PorscheAdBuilder() {
                         style={{
                           fontSize: `${fontSize}rem`,
                           maxWidth: "512px",
+                          transform: "scaleX(0.85)",
+                          transformOrigin: "left center",
                         }}
                       >
                         {displayTagline}
@@ -802,67 +813,71 @@ export default function PorscheAdBuilder() {
                   Create an account to save and download your ads
                 </p>
               )}
-              {user && (
-                <p className="text-sm mb-4 text-green-600 dark:text-green-400">
-                  ✓ Signed in • Unlimited exports
-                </p>
+              {user && hasSubscription && (
+                <div className="text-sm mb-4">
+                  <p className="text-green-600 dark:text-green-400">
+                    ✓ Unlimited Subscription Active
+                  </p>
+                </div>
               )}
 
-              <Button
-                onClick={handleExport}
-                disabled={!uploadedImage}
-                className="w-full"
-                size="lg"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                {user ? "Save & Download Image" : "Sign In to Download"}
-              </Button>
-
-              {/* PAYMENT OPTIONS HIDDEN FOR PREVIEW MODE */}
-              {/* {user && (
-                <div className="mt-4 pt-4 border-t space-y-3">
-                  <p className="text-xs text-muted-foreground text-center">
-                    Need more exports?
-                  </p>
+              {!user ? (
+                <Button
+                  onClick={() => setShowAuthModal(true)}
+                  disabled={!uploadedImage}
+                  className="w-full"
+                  size="lg"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Sign In to Download
+                </Button>
+              ) : hasSubscription || userCredits > 0 ? (
+                <Button
+                  onClick={handleExport}
+                  disabled={!uploadedImage}
+                  className="w-full bg-linear-to-b from-green-600 to-green-700 text-white"
+                  size="lg"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Image
+                </Button>
+              ) : (
+                <div className="space-y-3">
                   <Button
-                    onClick={(e) => handleExportClick("image-3pack", e)}
-                    disabled={!uploadedImage}
-                    variant="outline"
-                    className="w-full"
-                    size="sm"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    3-Pack - ${(PRODUCTS[0].priceInCents / 100).toFixed(2)}
-                  </Button>
-                  <Button
-                    onClick={(e) =>
-                      handleExportClick("monthly-subscription", e)
-                    }
-                    disabled={!uploadedImage}
-                    variant="outline"
-                    className="w-full"
-                    size="sm"
+                    onClick={() => setCheckoutProduct("monthly-subscription")}
+                    className="w-full bg-linear-to-b from-green-600 to-green-700 hover:from-green-400 text-white"
+                    size="lg"
                   >
                     <Car className="mr-2 h-4 w-4" />
-                    Unlimited - ${(PRODUCTS[1].priceInCents / 100).toFixed(2)}
-                    /mo
+                    Unlimited Downloads - $
+                    {(PRODUCTS[1].priceInCents / 100).toFixed(2)}/mo
+                  </Button>
+                  <Button
+                    onClick={() => setCheckoutProduct("single-download")}
+                    disabled={!uploadedImage}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Single Download - $
+                    {(PRODUCTS[0].priceInCents / 100).toFixed(2)}
                   </Button>
                 </div>
-              )} */}
+              )}
             </Card>
           </div>
         </div>
       </div>
 
-      {/* CHECKOUT MODAL HIDDEN FOR PREVIEW MODE */}
-      {/* {checkoutProduct && (
-        <CheckoutModal
+      {checkoutProduct && (
+        <PaymentModal
           isOpen={!!checkoutProduct}
           onClose={() => setCheckoutProduct(null)}
           productId={checkoutProduct}
           onSuccess={handleCheckoutSuccess}
         />
-      )} */}
+      )}
 
       {showAuthModal && (
         <AuthModal

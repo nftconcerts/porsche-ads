@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   description: string;
   priceInCents: number;
+  stripePriceId: string; // Stripe Price ID
   type: "one_time" | "subscription";
   recurring?: {
     interval: "month" | "year";
@@ -11,10 +12,11 @@ export interface Product {
 
 export const PRODUCTS: Product[] = [
   {
-    id: "image-3pack",
-    name: "3-Pack Image Export",
-    description: "Download 3 custom Porsche ads as high-resolution images",
-    priceInCents: 550, // $5.50
+    id: "single-download",
+    name: "Single Download",
+    description: "Download 1 custom Porsche ad as high-resolution image",
+    priceInCents: 1000, // $10.00
+    stripePriceId: "price_1SgH90IN1N57cIQQhvVkDIvX",
     type: "one_time",
   },
   {
@@ -22,6 +24,7 @@ export const PRODUCTS: Product[] = [
     name: "Monthly Unlimited",
     description: "Unlimited image exports and saves - billed monthly",
     priceInCents: 911, // $9.11
+    stripePriceId: "price_1SgH9dIN1N57cIQQvwy9TlG2",
     type: "subscription",
     recurring: {
       interval: "month",

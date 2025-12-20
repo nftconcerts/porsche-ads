@@ -83,9 +83,9 @@ export async function POST(req: NextRequest) {
       let creditsToAdd = 0;
       let isSubscription = false;
 
-      if (productId === "image-3pack") {
-        role = "pack_customer";
-        creditsToAdd = 3;
+      if (productId === "single-download") {
+        role = "customer";
+        creditsToAdd = 1;
       } else if (productId === "monthly-subscription") {
         role = "subscription_customer";
         isSubscription = true;
@@ -149,6 +149,77 @@ export async function POST(req: NextRequest) {
       });
     } catch (error: any) {
       console.error("Error processing webhook:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  }
+
+  // Handle payment_intent.succeeded for one-time payments
+  if (event.type === "payment_intent.succeeded") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+    try {
+      const productId = paymentIntent.metadata?.productId;
+      const userEmail = paymentIntent.metadata?.userEmail;
+
+      if (!userEmail) {
+        console.log("No user email in payment intent metadata");
+        return NextResponse.json({ received: true });
+      }
+
+      // Find user by email
+      let userRecord;
+      try {
+        userRecord = await adminAuth.getUserByEmail(userEmail);
+      } catch (error: any) {
+        console.error("User not found for payment intent:", userEmail);
+        return NextResponse.json({ received: true });
+      }
+
+      // Add credits based on product
+      let creditsToAdd = 0;
+      if (productId === "single-download") {
+        creditsToAdd = 1;
+      }
+
+      if (creditsToAdd > 0) {
+        const userRef = adminDb.collection("users").doc(userRecord.uid);
+        const userDoc = await userRef.get();
+        const currentCredits = userDoc.data()?.credits || 0;
+
+        await userRef.update({
+          credits: currentCredits + creditsToAdd,
+        });
+
+        // Update custom claims
+        await adminAuth.setCustomUserClaims(userRecord.uid, {
+          ...userRecord.customClaims,
+          hasCredits: true,
+        });
+
+        console.log(
+          `Added ${creditsToAdd} credits to user ${userEmail}. Total: ${
+            currentCredits + creditsToAdd
+          }`
+        );
+
+        // Store purchase record
+        await adminDb
+          .collection("users")
+          .doc(userRecord.uid)
+          .collection("purchases")
+          .add({
+            paymentIntentId: paymentIntent.id,
+            productId: productId,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            status: paymentIntent.status,
+            createdAt: new Date().toISOString(),
+          });
+      }
+
+      return NextResponse.json({ received: true });
+    } catch (error: any) {
+      console.error("Error processing payment intent:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }

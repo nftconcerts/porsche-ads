@@ -3,6 +3,81 @@
 import { stripe } from "@/lib/stripe";
 import { PRODUCTS } from "@/lib/products";
 
+export async function createPaymentIntent(
+  productId: string,
+  userEmail?: string
+) {
+  const product = PRODUCTS.find((p) => p.id === productId);
+  if (!product) {
+    throw new Error(`Product with id "${productId}" not found`);
+  }
+
+  if (product.type === "subscription") {
+    throw new Error("Use createSubscription for subscription products");
+  }
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: product.priceInCents,
+    currency: "usd",
+    automatic_payment_methods: {
+      enabled: true, // Enables Apple Pay, Google Pay, etc.
+    },
+    metadata: {
+      productId: productId,
+      userEmail: userEmail || "",
+    },
+  });
+
+  return {
+    clientSecret: paymentIntent.client_secret!,
+    paymentIntentId: paymentIntent.id,
+  };
+}
+
+export async function createSubscription(
+  productId: string,
+  userEmail?: string
+) {
+  const product = PRODUCTS.find((p) => p.id === productId);
+  if (!product) {
+    throw new Error(`Product with id "${productId}" not found`);
+  }
+
+  if (product.type !== "subscription") {
+    throw new Error("Use createPaymentIntent for one-time products");
+  }
+
+  // For subscriptions, we need to use Checkout Session
+  // Payment Element doesn't support subscriptions directly
+  const session = await stripe.checkout.sessions.create({
+    mode: "subscription",
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price: product.stripePriceId,
+        quantity: 1,
+      },
+    ],
+    success_url: `${
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    }/?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    }/`,
+    customer_email: userEmail,
+    allow_promotion_codes: true,
+    metadata: {
+      productId: productId,
+    },
+  });
+
+  return {
+    sessionId: session.id,
+    url: session.url!,
+  };
+}
+
+// Legacy function for backward compatibility
 export async function startCheckoutSession(
   productId: string,
   allowPromotionCodes = true
@@ -16,32 +91,15 @@ export async function startCheckoutSession(
     ui_mode: "embedded",
     redirect_on_completion: "never",
     allow_promotion_codes: allowPromotionCodes,
-    payment_method_types: ["card", "link", "apple_pay", "google_pay"],
+    payment_method_types: ["card", "link"],
     line_items: [
       {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: product.name,
-            description: product.description,
-          },
-          unit_amount: product.priceInCents,
-          ...(product.type === "subscription" && product.recurring
-            ? {
-                recurring: {
-                  interval: product.recurring.interval,
-                },
-              }
-            : {}),
-        },
+        price: product.stripePriceId,
         quantity: 1,
       },
     ],
     mode: product.type === "subscription" ? "subscription" : "payment",
-    // Collect customer email (required for account creation)
-    customer_email: undefined, // Let Stripe collect it
     billing_address_collection: "auto",
-    // Store product ID in metadata for the webhook
     metadata: {
       productId: productId,
     },
