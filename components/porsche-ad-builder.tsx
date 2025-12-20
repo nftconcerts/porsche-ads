@@ -908,7 +908,7 @@ export default function PorscheAdBuilder() {
                   </Button>
                   <Link
                     href="/my-account"
-                    className="text-[12px] text-muted-foreground underline hover:text-[#777] w-full block text-center"
+                    className="text-[12px] text-muted-foreground underline hover:text-[#777] w-full block text-center mt-3"
                   >
                     View Your Ads
                   </Link>
@@ -937,7 +937,7 @@ export default function PorscheAdBuilder() {
                   </Button>
                   <Link
                     href="/my-account"
-                    className="text-[12px] text-muted-foreground underline hover:text-[#777] w-full block text-center"
+                    className="text-[12px] text-muted-foreground underline hover:text-[#777] w-full block text-center mt-3"
                   >
                     View Your Ads
                   </Link>
