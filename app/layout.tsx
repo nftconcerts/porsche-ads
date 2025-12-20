@@ -20,8 +20,13 @@ export const metadata: Metadata = {
   title: "p-ads.com",
   description: "Create your own classic Porsche advertisement",
   themeColor: "#0E0E12",
+  viewport: "width=device-width, initial-scale=1",
   icons: {
+    apple: "/favicon/apple-touch-icon.png",
     // ... existing code ...
+  },
+  other: {
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
   },
 };
 
@@ -32,13 +37,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={workSans.variable}>
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <link
-        rel="icon"
-        type="image/png"
-        sizes="32x32"
-        href="/favicon/favicon-32x32.png"
-      />
       <body className={`font-arial antialiased`}>
         {/* <Lockscreen /> */}
         <ClientProvider>{children}</ClientProvider>
