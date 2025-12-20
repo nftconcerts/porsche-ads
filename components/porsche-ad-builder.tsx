@@ -514,6 +514,10 @@ export default function PorscheAdBuilder() {
 
   const handleExport = () => {
     console.log("[v0] handleExport called, user:", user);
+    if (isGenerating) {
+      console.log("[v0] Export already in progress, ignoring click");
+      return;
+    }
     if (!user) {
       console.log("[v0] No user, showing auth modal");
       setShowAuthModal(true);
@@ -852,12 +856,12 @@ export default function PorscheAdBuilder() {
               ) : hasSubscription || userCredits > 0 ? (
                 <Button
                   onClick={handleExport}
-                  disabled={!uploadedImage}
+                  disabled={!uploadedImage || isGenerating}
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
                   size="lg"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Download Image
+                  {isGenerating ? "Generating..." : "Download Image"}
                 </Button>
               ) : (
                 <div className="space-y-3">
