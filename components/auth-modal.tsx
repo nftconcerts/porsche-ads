@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { initializeNewUser } from "@/app/actions/init-user";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -54,8 +55,10 @@ export default function AuthModal({
 
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
-        toast.success("Account created! You can now export your ad.");
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Initialize new user with 1 free credit
+        await initializeNewUser(userCredential.user.uid, userCredential.user.email!);
+        toast.success("Account created! You got 1 free download.");
         if (onSuccess) onSuccess();
         if (onClose) onClose();
       } else {
@@ -100,8 +103,10 @@ export default function AuthModal({
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
-      toast.success("Signed in with Google! You can now export your ad.");
+      const result = await signInWithPopup(auth, googleProvider);
+      // Initialize new user with 1 free credit (will only set if new user)
+      await initializeNewUser(result.user.uid, result.user.email!);
+      toast.success("Signed in with Google!");
       if (onSuccess) onSuccess();
       if (onClose) onClose();
     } catch (error: any) {

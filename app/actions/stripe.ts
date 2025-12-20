@@ -60,7 +60,7 @@ export async function createSubscription(
     ],
     success_url: `${
       process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    }/?session_id={CHECKOUT_SESSION_ID}`,
+    }/my-account?success=true&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${
       process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     }/`,
@@ -68,6 +68,7 @@ export async function createSubscription(
     allow_promotion_codes: true,
     metadata: {
       productId: productId,
+      userEmail: userEmail || "",
     },
   });
 
@@ -114,4 +115,26 @@ export async function startCheckoutSession(
   }
 
   return session.client_secret;
+}
+
+export async function getCheckoutSession(sessionId: string) {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    return {
+      success: true,
+      session: {
+        id: session.id,
+        status: session.status,
+        payment_status: session.payment_status,
+        customer_email: session.customer_details?.email,
+        metadata: session.metadata,
+      },
+    };
+  } catch (error: any) {
+    console.error("Error retrieving session:", error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
 }

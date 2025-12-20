@@ -18,7 +18,7 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2">
           {/* Left: Gallery Link */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {(path !== "/gallery" && (
               <Link href="/gallery">
                 <Button
@@ -46,13 +46,15 @@ export default function Header() {
 
           {/* Center: Title */}
           <div className="flex-1 text-center">
-            <h1 className="text-base sm:text-xl font-bold text-white">
-              Porsche Ad Builder
-            </h1>
+            <Link href="/">
+              <h1 className="text-base sm:text-xl font-bold text-white">
+                Porsche Ad Builder
+              </h1>
+            </Link>
           </div>
 
           {/* Right: Auth */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {loading ? (
               <div className="h-8 w-16 animate-pulse rounded bg-gray-800" />
             ) : user ? (

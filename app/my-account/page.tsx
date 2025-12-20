@@ -7,11 +7,13 @@ import { signOut } from "firebase/auth";
 import { adminDb } from "@/lib/firebase-admin";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/header";
+import { getCheckoutSession } from "@/app/actions/stripe";
+import { getUserCredits } from "@/lib/user-credits";
 
 interface AdImage {
   id: string;
@@ -24,9 +26,12 @@ interface AdImage {
 export default function MyAccountPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [images, setImages] = useState<AdImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [subscriptionActive, setSubscriptionActive] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -35,10 +40,53 @@ export default function MyAccountPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
+    const success = searchParams.get("success");
+    const sessionId = searchParams.get("session_id");
+
+    if (success === "true" && sessionId && user) {
+      // Verify the session and show success message
+      verifySubscription(sessionId);
+    }
+  }, [searchParams, user]);
+
+  const verifySubscription = async (sessionId: string) => {
+    try {
+      const result = await getCheckoutSession(sessionId);
+      if (result.success && result.session?.payment_status === "paid") {
+        setShowSuccess(true);
+        // Refresh user credits/subscription status
+        if (user) {
+          const creditData = await getUserCredits(user.uid);
+          setSubscriptionActive(creditData.subscriptionActive);
+        }
+        toast({
+          title: "Subscription Active! 🎉",
+          description: "You now have unlimited downloads.",
+        });
+        // Remove query params from URL
+        router.replace("/my-account");
+      }
+    } catch (error) {
+      console.error("Error verifying subscription:", error);
+    }
+  };
+
+  useEffect(() => {
     if (user) {
       fetchUserImages();
+      fetchSubscriptionStatus();
     }
   }, [user]);
+
+  const fetchSubscriptionStatus = async () => {
+    if (!user) return;
+    try {
+      const creditData = await getUserCredits(user.uid);
+      setSubscriptionActive(creditData.subscriptionActive);
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+    }
+  };
 
   const fetchUserImages = async () => {
     if (!user) return;
@@ -126,6 +174,41 @@ export default function MyAccountPage() {
           <h1 className="text-3xl font-bold text-white mb-2">My Account</h1>
           <p className="text-gray-400">{user.email}</p>
         </div>
+
+        {showSuccess && (
+          <Card className="p-6 mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div>
+                <h3 className="font-semibold text-green-900 dark:text-green-100">
+                  Subscription Activated!
+                </h3>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  You now have unlimited downloads. Create as many Porsche ads
+                  as you want!
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {subscriptionActive && (
+          <Card className="p-4 mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                  Unlimited Subscription Active
+                </span>
+              </div>
+              <Link href="/">
+                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                  Create New Ad
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        )}
 
         <Card className="p-6 mb-8 bg-white dark:bg-gray-900">
           <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">

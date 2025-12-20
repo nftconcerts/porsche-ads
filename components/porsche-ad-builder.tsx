@@ -810,7 +810,7 @@ export default function PorscheAdBuilder() {
               <h2 className="mb-2 font-semibold text-lg">Export Your Ad</h2>
               {!user && (
                 <p className="text-sm mb-4 text-muted-foreground">
-                  Create an account to save and download your ads
+                  Sign in to get your first download free
                 </p>
               )}
               {user && hasSubscription && (
@@ -820,22 +820,29 @@ export default function PorscheAdBuilder() {
                   </p>
                 </div>
               )}
+              {user && !hasSubscription && userCredits > 0 && (
+                <div className="text-sm mb-4">
+                  <p className="text-muted-foreground">
+                    {userCredits} download{userCredits !== 1 ? 's' : ''} remaining
+                  </p>
+                </div>
+              )}
 
               {!user ? (
                 <Button
                   onClick={() => setShowAuthModal(true)}
                   disabled={!uploadedImage}
-                  className="w-full"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                   size="lg"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Sign In to Download
+                  Sign In for Free Download
                 </Button>
               ) : hasSubscription || userCredits > 0 ? (
                 <Button
                   onClick={handleExport}
                   disabled={!uploadedImage}
-                  className="w-full bg-linear-to-b from-green-600 to-green-700 text-white"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                   size="lg"
                 >
                   <Download className="mr-2 h-4 w-4" />
@@ -845,7 +852,7 @@ export default function PorscheAdBuilder() {
                 <div className="space-y-3">
                   <Button
                     onClick={() => setCheckoutProduct("monthly-subscription")}
-                    className="w-full bg-linear-to-b from-green-600 to-green-700 hover:from-green-400 text-white"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
                     size="lg"
                   >
                     <Car className="mr-2 h-4 w-4" />

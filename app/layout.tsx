@@ -40,7 +40,7 @@ export default function RootLayout({
         href="/favicon/favicon-32x32.png"
       />
       <body className={`font-arial antialiased`}>
-        <Lockscreen />
+        {/* <Lockscreen /> */}
         <ClientProvider>{children}</ClientProvider>
         <Analytics />
         <Footer />
