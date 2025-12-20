@@ -125,6 +125,16 @@ export default function PorscheAdBuilder() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Set default format based on device width (mobile = square, else poster)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isMobile = window.innerWidth < 768;
+      setFormat(isMobile ? "square" : "poster");
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleFileChange = useCallback(
     (file: File | File[]) => {
       // Handle single file or array of files - take the first file if array
