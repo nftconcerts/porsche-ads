@@ -866,13 +866,13 @@ export default function PAdBuilder() {
                   Sign in to get 5 free downloads
                 </p>
               )}
-              {user && hasSubscription && (
+              {/* {user && hasSubscription && (
                 <div className="text-sm mb-4">
                   <p className="text-green-600 dark:text-green-400">
                     ✓ Unlimited Subscription Active
                   </p>
                 </div>
-              )}
+              )} */}
               {user && !hasSubscription && userCredits > 0 && (
                 <div className="text-sm mb-4">
                   <p className="text-muted-foreground">
