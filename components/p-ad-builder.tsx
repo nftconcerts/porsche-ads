@@ -846,7 +846,7 @@ export default function PAdBuilder() {
               <h2 className="mb-2 font-semibold text-lg">Export Your Ad</h2>
               {!user && (
                 <p className="text-sm mb-4 text-muted-foreground">
-                  Sign in to get your first download free
+                  Sign in to get 5 free downloads
                 </p>
               )}
               {user && hasSubscription && (
