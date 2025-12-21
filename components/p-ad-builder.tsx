@@ -909,6 +909,10 @@ export default function PAdBuilder() {
                   >
                     View Your Ads
                   </Link>
+                  <p className="text-[10px] text-center text-[#aaa] mt-8 md:hidden">
+                    Ads generated on mobile devices may be lower resolution for
+                    stability. For best results, use a desktop browser.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
