@@ -7,6 +7,7 @@ import Footer from "@/components/footer";
 import ClientProvider from "@/components/ClientProvider";
 import Lockscreen from "@/components/lockscreen";
 import { Toaster } from "@/components/ui/toaster";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -64,6 +65,7 @@ export default function RootLayout({
       >
         {/* <Lockscreen /> */}
         <ClientProvider>{children}</ClientProvider>
+        <GoogleAnalytics gaId="G-WN6EYJ3Z1K" />
         <Analytics />
         <Footer />
         <Toaster />
