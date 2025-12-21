@@ -107,12 +107,29 @@ export default function PAdBuilder() {
   // Fetch user credits when user is authenticated
   useEffect(() => {
     if (user) {
-      getUserCredits(user.uid).then((data) => {
-        setUserCredits(data.credits);
-        setHasSubscription(data.subscriptionActive);
-      });
+      const url = new URL(window.location.href);
+      const success = url.searchParams.get("success");
+      if (success === "true") {
+        // Always refresh credits/subscription if returning from Stripe
+        getUserCredits(user.uid).then((data) => {
+          setUserCredits(data.credits);
+          setHasSubscription(data.subscriptionActive);
+        });
+        // Remove the success param from the URL (clean up)
+        url.searchParams.delete("success");
+        window.history.replaceState(
+          {},
+          document.title,
+          url.pathname + url.search
+        );
+      } else {
+        getUserCredits(user.uid).then((data) => {
+          setUserCredits(data.credits);
+          setHasSubscription(data.subscriptionActive);
+        });
+      }
     }
-  }, [user]);
+  }, [user, window.location.href]);
 
   // Track window width for responsive text positioning
   React.useEffect(() => {
