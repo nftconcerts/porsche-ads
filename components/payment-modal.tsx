@@ -157,6 +157,7 @@ interface PaymentModalProps {
   onClose: () => void;
   productId: string;
   onSuccess: () => void;
+  userEmail?: string;
 }
 
 export default function PaymentModal({
@@ -164,6 +165,7 @@ export default function PaymentModal({
   onClose,
   productId,
   onSuccess,
+  userEmail,
 }: PaymentModalProps) {
   const { user } = useAuth();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -185,10 +187,12 @@ export default function PaymentModal({
 
         // For subscriptions, redirect to Checkout
         if (product.type === "subscription") {
-          const { url } = await createSubscription(
-            productId,
-            user?.email || undefined
-          );
+          if (!userEmail) {
+            alert("You must be signed in to subscribe.");
+            onClose();
+            return;
+          }
+          const { url } = await createSubscription(productId, userEmail);
           setRedirectUrl(url);
           // Redirect immediately
           window.location.href = url;
@@ -196,9 +200,14 @@ export default function PaymentModal({
         }
 
         // For one-time payments, use Payment Element
+        if (!userEmail) {
+          alert("You must be signed in to purchase.");
+          onClose();
+          return;
+        }
         const { clientSecret: secret } = await createPaymentIntent(
           productId,
-          user?.email || undefined
+          userEmail
         );
         setClientSecret(secret);
       } catch (error: any) {

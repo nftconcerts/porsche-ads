@@ -928,12 +928,13 @@ export default function PAdBuilder() {
         </div>
       </div>
 
-      {checkoutProduct && (
+      {checkoutProduct && user && user.email && (
         <PaymentModal
           isOpen={!!checkoutProduct}
           onClose={() => setCheckoutProduct(null)}
           productId={checkoutProduct}
           onSuccess={handleCheckoutSuccess}
+          userEmail={user.email}
         />
       )}
 
