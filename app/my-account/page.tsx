@@ -275,10 +275,23 @@ export default function MyAccountPage() {
           )}
         </Card>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-8">
           <Button onClick={handleSignOut} variant="outline" size="lg">
             Sign Out
           </Button>
+        </div>
+
+        <div className="flex justify-center mt-4">
+          <a
+            href="/api/create-stripe-portal-session"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            <Button variant="ghost" size="sm">
+              Manage your subscription
+            </Button>
+          </a>
         </div>
       </div>
     </div>
